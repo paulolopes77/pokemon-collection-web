@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.10.1 — 2026-10-12
+- Removido o carrossel de imagens (e a procura de outros idiomas): a página da carta volta a ter uma só imagem,
+  com sombra. Os botões Cardmarket e TCGplayer mantêm a sombra.
+
 ## 0.10.0 — 2026-10-12
 - Página da carta: carrossel com outras imagens da mesma carta (a mesma carta noutros idiomas, via TCGdex:
   português, espanhol, francês, alemão, italiano, japonês, quando existirem). Telemóvel: deslizar com o dedo;

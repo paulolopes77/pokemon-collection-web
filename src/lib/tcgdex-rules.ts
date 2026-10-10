@@ -21,20 +21,3 @@ export function pickTcgdexSet(list: SetBrief[], name: string, printedTotal: numb
   }
   return null;
 }
-
-
-/** Idiomas em que procuramos outras versões da imagem da carta (a original é a inglesa). */
-export const IMAGE_LANGUAGES: { code: string; label: string }[] = [
-  { code: "pt", label: "Português" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-  { code: "de", label: "Deutsch" },
-  { code: "it", label: "Italiano" },
-  { code: "ja", label: "日本語" },
-];
-
-/** A TCGdex devolve o endereço base da imagem; a qualidade e o formato acrescentam-se no fim. */
-export function tcgdexImageUrl(base: string | null | undefined, quality: "low" | "high" = "high"): string | null {
-  const b = (base ?? "").trim().replace(/\/+$/, "");
-  return /^https:\/\//.test(b) ? `${b}/${quality}.webp` : null;
-}

@@ -8,7 +8,7 @@ import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
 import { filterSets, seriesOptions, yearOptions } from "../src/lib/sets-filter";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
-import { IMAGE_LANGUAGES, normalizeNumber, pickTcgdexSet, tcgdexImageUrl } from "../src/lib/tcgdex-rules";
+import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
 import { describeHttpFailure } from "../src/lib/http-errors";
 import { isDark, nextPref, parsePref, THEME_INIT_SCRIPT } from "../src/lib/theme";
 import { setNeedsSync } from "../src/lib/sync-rules";
@@ -271,12 +271,4 @@ test("sets filters: series, year, text (name + series), owned", () => {
   assert.deepEqual(filterSets(all, { ...none, query: "scarlet" }, {}).map((s) => s.id).sort(), ["sv1", "sv2"]);
   assert.deepEqual(filterSets(all, { ...none, year: "2023", query: "evolved" }, {}).map((s) => s.id), ["sv2"]);
   assert.deepEqual(filterSets(all, { ...none, onlyOwned: true }, { sv2: 3 }).map((s) => s.id), ["sv2"]);
-});
-
-test("tcgdex image url", () => {
-  assert.equal(tcgdexImageUrl("https://assets.tcgdex.net/pt/me/me05/116"), "https://assets.tcgdex.net/pt/me/me05/116/high.webp");
-  assert.equal(tcgdexImageUrl("https://assets.tcgdex.net/pt/me/me05/116/", "low"), "https://assets.tcgdex.net/pt/me/me05/116/low.webp");
-  assert.equal(tcgdexImageUrl(undefined), null);
-  assert.equal(tcgdexImageUrl("http://insecure.example/x"), null);
-  assert.deepEqual(IMAGE_LANGUAGES.map((l) => l.code), ["pt", "es", "fr", "de", "it", "ja"]);
 });
