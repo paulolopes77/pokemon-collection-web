@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.15.2 — 2026-10-12
+- Sets (só administrador): borda direita verde/vermelha em cada set — verde = todas as cartas já estão na base de dados, vermelho = por sincronizar ou incompleto.
+
 ## 0.15.1 — 2026-10-12
 - Coleção, Wishlist, Sets e página de um Set: ao abrir uma carta e voltar, os filtros, pesquisa, ordenação, agrupamento, grupos recolhidos e a posição do scroll ficam como estavam (guardados enquanto o separador estiver aberto).
 

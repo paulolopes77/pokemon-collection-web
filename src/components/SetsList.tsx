@@ -6,7 +6,7 @@ import { useViewMemory } from "@/lib/use-view-memory";
 import { filterSets, seriesOptions, yearOptions } from "@/lib/sets-filter";
 import type { SetRow } from "@/lib/types";
 
-export function SetsList({ sets, owned }: { sets: SetRow[]; owned: Record<string, number> }) {
+export function SetsList({ sets, owned, stored }: { sets: SetRow[]; owned: Record<string, number>; stored?: Record<string, number> }) {
   const [query, setQuery] = useState("");
   const [series, setSeries] = useState("");
   const [year, setYear] = useState("");
@@ -59,11 +59,16 @@ export function SetsList({ sets, owned }: { sets: SetRow[]; owned: Record<string
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {visible.map((s) => {
           const n = owned[s.id] ?? 0;
+          // Administrador: borda direita verde = set completo na base de dados; vermelha = por sincronizar / incompleto.
+          const inDb = stored ? (stored[s.id] ?? 0) : 0;
+          const synced = stored ? s.total > 0 && inDb >= s.total : null;
+          const syncBorder = synced == null ? "" : synced ? "border-r-4 border-r-green-500" : "border-r-4 border-r-red-500";
           return (
             <li key={s.id}>
               <Link
                 href={`/sets/${encodeURIComponent(s.id)}`}
-                className="flex h-full items-center gap-3 rounded-xl border border-zinc-300 bg-white/90 p-3 shadow-sm transition hover:border-zinc-400 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900/85 dark:hover:border-zinc-500"
+                title={synced == null ? undefined : synced ? `Sincronizado (${inDb}/${s.total} cartas na base de dados)` : `Por sincronizar (${inDb}/${s.total} cartas na base de dados)`}
+                className={`flex h-full items-center gap-3 rounded-xl border border-zinc-300 bg-white/90 p-3 shadow-sm transition hover:border-zinc-400 hover:shadow-md dark:border-zinc-700 dark:bg-zinc-900/85 dark:hover:border-zinc-500 ${syncBorder}`}
               >
                 {s.logo_url ? (
                   // eslint-disable-next-line @next/next/no-img-element

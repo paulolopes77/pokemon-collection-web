@@ -40,6 +40,19 @@ export async function loadSets(supabase: SupabaseClient): Promise<SetRow[]> {
   return (data ?? []) as SetRow[];
 }
 
+/** set_id -> nº de cartas desse set já guardadas na base de dados (para o administrador ver o estado do sync). */
+export async function loadStoredCounts(supabase: SupabaseClient): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase.from("cards").select("set_id").order("id").range(from, from + PAGE - 1);
+    if (error) throw error;
+    const rows = (data ?? []) as { set_id: string }[];
+    for (const r of rows) counts[r.set_id] = (counts[r.set_id] ?? 0) + 1;
+    if (rows.length < PAGE) break;
+  }
+  return counts;
+}
+
 /** set_id -> nº de cartas diferentes que o utilizador tem. */
 export async function loadOwnedBySet(supabase: SupabaseClient): Promise<Record<string, number>> {
   const counts: Record<string, number> = {};

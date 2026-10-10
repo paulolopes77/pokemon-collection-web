@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { SetsList } from "@/components/SetsList";
 import { SyncButton } from "@/components/SyncButton";
-import { loadOwnedBySet, loadSets } from "@/lib/queries";
+import { getAdminUser } from "@/lib/admin";
+import { loadOwnedBySet, loadSets, loadStoredCounts } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { syncSetsAction } from "../../actions";
 
@@ -10,7 +11,9 @@ export const maxDuration = 60;
 
 export default async function SetsPage() {
   const supabase = await createClient();
-  const [sets, owned] = await Promise.all([loadSets(supabase), loadOwnedBySet(supabase)]);
+  const [sets, owned, admin] = await Promise.all([loadSets(supabase), loadOwnedBySet(supabase), getAdminUser()]);
+  // Só o administrador vê o estado do sync de cada set (cartas guardadas na base de dados).
+  const stored = admin ? await loadStoredCounts(supabase) : undefined;
   return (
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -20,7 +23,7 @@ export default async function SetsPage() {
       {sets.length === 0 ? (
         <p className="py-10 text-center text-zinc-500">A carregar sets da Pokémon TCG API…</p>
       ) : (
-        <SetsList sets={sets} owned={owned} />
+        <SetsList sets={sets} owned={owned} stored={stored} />
       )}
       <p className="mt-6 text-xs text-zinc-500">
         Dados: Pokémon TCG API · <Link href="/search" className="underline">pesquisar cartas</Link>
