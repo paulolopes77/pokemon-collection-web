@@ -4,7 +4,7 @@ import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Coleção Pokémon",
+  title: "Pokémon TCG Collection",
   description: "Gestor de coleção de cartas Pokémon com preços do Cardmarket (EUR).",
 };
 export const viewport: Viewport = { themeColor: "#d32f2f", width: "device-width", initialScale: 1 };
