@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/admin";
-import { validateNewUser } from "@/lib/admin-rules";
+import { validateNewUser, validatePassword } from "@/lib/admin-rules";
 import { errorMessage } from "@/lib/errors";
 import { clampInt, generateCode } from "@/lib/invite";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -69,4 +69,20 @@ export async function deleteInvite(formData: FormData) {
   if (error) return back("error", errorMessage(error));
   revalidatePath("/admin/users");
   return back("ok", "Convite apagado.");
+}
+
+/** Define uma nova password para um utilizador (esqueceu-se dela). Só administradores. */
+export async function resetUserPassword(formData: FormData) {
+  const admin = await getAdminUser();
+  if (!admin) return back("error", "Sem permissão.");
+
+  const id = String(formData.get("id") ?? "");
+  const password = String(formData.get("password") ?? "");
+  if (!id) return back("error", "Pedido inválido.");
+  const problem = validatePassword(password);
+  if (problem) return back("error", problem);
+
+  const { error } = await createAdminClient().auth.admin.updateUserById(id, { password });
+  if (error) return back("error", errorMessage(error));
+  return back("ok", "Password reposta. Envia a nova password ao utilizador e pede-lhe para a alterar em «Conta».");
 }

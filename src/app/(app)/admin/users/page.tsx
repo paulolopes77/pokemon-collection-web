@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { createInvite, createUser, deleteInvite, deleteUser } from "@/app/admin-actions";
+import { createInvite, createUser, deleteInvite, deleteUser, resetUserPassword } from "@/app/admin-actions";
 import { getAdminUser } from "@/lib/admin";
 import { MIN_PASSWORD } from "@/lib/admin-rules";
 import { formatCode, inviteState } from "@/lib/invite";
@@ -118,12 +118,25 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                   {u.last_sign_in_at ? ` · último acesso ${new Date(u.last_sign_in_at).toLocaleDateString("pt-PT")}` : " · nunca entrou"}
                 </span>
               </span>
-              {u.id !== admin.id && (
-                <form action={deleteUser}>
-                  <input type="hidden" name="id" value={u.id} />
-                  <button className="btn text-red-600 dark:text-red-400">Apagar</button>
-                </form>
-              )}
+              <span className="flex shrink-0 items-start gap-2">
+                <details className="relative">
+                  <summary className="btn cursor-pointer list-none">Repor password</summary>
+                  <form
+                    action={resetUserPassword}
+                    className="absolute right-0 z-10 mt-1 flex w-64 flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 shadow dark:border-zinc-700 dark:bg-zinc-900"
+                  >
+                    <input type="hidden" name="id" value={u.id} />
+                    <input name="password" type="text" required minLength={MIN_PASSWORD} autoComplete="off" placeholder={`Nova password (mín. ${MIN_PASSWORD})`} className="input" />
+                    <button className="btn btn-primary">Guardar</button>
+                  </form>
+                </details>
+                {u.id !== admin.id && (
+                  <form action={deleteUser}>
+                    <input type="hidden" name="id" value={u.id} />
+                    <button className="btn text-red-600 dark:text-red-400">Apagar</button>
+                  </form>
+                )}
+              </span>
             </li>
           ))}
         </ul>

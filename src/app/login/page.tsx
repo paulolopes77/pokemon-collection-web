@@ -19,6 +19,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <button className="btn btn-primary">Entrar</button>
       </form>
       <p className="text-sm">
+        <Link href="/forgot" className="underline">Esqueci-me da password</Link>
+      </p>
+      <p className="text-sm">
         Tens um código de convite? <Link href="/register" className="underline">Criar conta</Link>
       </p>
     </main>

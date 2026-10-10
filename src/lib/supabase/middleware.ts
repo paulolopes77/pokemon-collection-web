@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/register", "/api/cron"];
+const PUBLIC_PATHS = ["/login", "/register", "/forgot", "/auth", "/api/cron"];
 
 /** Renova a sessão e manda para /login quem não tem sessão. */
 export async function updateSession(request: NextRequest) {

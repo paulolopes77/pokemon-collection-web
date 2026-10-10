@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { validateNewUser } from "@/lib/admin-rules";
+import { headers } from "next/headers";
+import { validateNewUser, validatePassword } from "@/lib/admin-rules";
 import { normalizeCode } from "@/lib/invite";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { errorMessage } from "@/lib/errors";
@@ -132,4 +133,43 @@ export async function signUp(formData: FormData) {
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
   if (signInError) redirect("/login?error=" + encodeURIComponent("Conta criada. Entra com o teu email e password."));
   redirect("/");
+}
+
+/** Alterar a própria password (sessão iniciada). */
+export async function changePassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+  const problem = validatePassword(password, confirm);
+  if (problem) redirect("/account?error=" + encodeURIComponent(problem));
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) redirect("/account?error=" + encodeURIComponent(error.message));
+  redirect("/account?ok=" + encodeURIComponent("Password alterada."));
+}
+
+/**
+ * «Esqueci-me da password» por email. Precisa de um servidor de email configurado no Supabase
+ * (o de origem só envia para membros da equipa). A resposta é sempre a mesma, exista ou não a conta.
+ */
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect("/forgot?error=" + encodeURIComponent("Email inválido."));
+
+  const h = await headers();
+  const origin = h.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${origin}/auth/reset` });
+  if (error && (error.status === 429 || /rate limit/i.test(error.message))) {
+    redirect("/forgot?error=" + encodeURIComponent("Demasiados pedidos. Tenta novamente daqui a pouco."));
+  }
+  redirect(
+    "/forgot?ok=" +
+      encodeURIComponent("Se existir uma conta com esse email, enviámos um link para definir uma nova password. Vê também o spam."),
+  );
 }

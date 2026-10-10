@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.4.0 — 2026-10-12
+- Recuperação de password: página «Conta» (alterar a própria password), reposição pelo administrador e
+  «Esqueci-me da password» por email (requer SMTP no Supabase).
+
 ## 0.3.0 — 2026-10-12
 - Registo só por convite: códigos gerados pelo administrador (usos máximos e validade), página `/register`,
   contas criadas já confirmadas (sem email/SMTP). Removido o registo público com confirmação por email.

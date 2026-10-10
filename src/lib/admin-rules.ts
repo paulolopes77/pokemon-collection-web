@@ -17,3 +17,10 @@ export function validateNewUser(email: string, password: string): string | null 
   if (password.length < MIN_PASSWORD) return `A password deve ter pelo menos ${MIN_PASSWORD} caracteres.`;
   return null;
 }
+
+/** Validação de uma password nova (e da sua confirmação, se existir). */
+export function validatePassword(password: string, confirm?: string): string | null {
+  if (password.length < MIN_PASSWORD) return `A password deve ter pelo menos ${MIN_PASSWORD} caracteres.`;
+  if (confirm !== undefined && password !== confirm) return "As passwords não coincidem.";
+  return null;
+}

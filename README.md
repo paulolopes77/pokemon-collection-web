@@ -59,6 +59,17 @@ O site é **fechado**: só entra quem tiver conta. Há duas formas de criar cont
   preciso email nem SMTP**, e o registo público do Supabase pode ficar **desligado**.
 - **Criação direta:** na mesma página crias uma conta (email + password) e apagas contas (apaga também a coleção).
 
+### Recuperação de password
+
+- **Alterar a própria password:** separador **Conta** (sessão iniciada).
+- **Sem email (recomendado para amigos):** se alguém se esquecer da password, o administrador abre
+  **Utilizadores → Repor password**, define uma password temporária e envia-a; a pessoa entra e muda-a em **Conta**.
+  A coleção mantém-se.
+- **«Esqueci-me da password» (por email):** a página `/forgot` envia um link de recuperação. **Só funciona se o Supabase
+  tiver um servidor de email próprio** (Authentication → SMTP Settings): o servidor de origem só envia para membros da tua
+  equipa Supabase e tem limites muito baixos. Também é preciso acrescentar `https://O-TEU-SITE/auth/reset` em
+  **Authentication → URL Configuration → Redirect URLs**. O link deve ser aberto no mesmo navegador em que foi pedido.
+
 Cada utilizador só vê e altera a **sua** coleção (RLS); sets, cartas e preços são partilhados.
 Migrações: `0001_init.sql` (esquema) e `0002_invites.sql` (convites) — corre-as por esta ordem no SQL Editor.
 

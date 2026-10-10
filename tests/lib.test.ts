@@ -4,7 +4,7 @@ import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
-import { isAdminEmail, parseAdminEmails, validateNewUser } from "../src/lib/admin-rules";
+import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
 import { setNeedsSync } from "../src/lib/sync-rules";
 import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
 
@@ -122,4 +122,11 @@ test("invite codes", () => {
   assert.equal(clampInt("99", 1, 50, 1), 50);
   assert.equal(clampInt("abc", 1, 50, 7), 7);
   assert.equal(clampInt(null, 0, 365, 7), 7);
+});
+
+test("validatePassword", () => {
+  assert.match(validatePassword("123") ?? "", /pelo menos 8/);
+  assert.equal(validatePassword("12345678"), null);
+  assert.equal(validatePassword("12345678", "12345678"), null);
+  assert.equal(validatePassword("12345678", "12345679"), "As passwords não coincidem.");
 });
