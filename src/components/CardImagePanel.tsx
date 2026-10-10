@@ -5,7 +5,7 @@ import type { CardRow } from "@/lib/types";
 export function CardImagePanel({ card }: { card: Pick<CardRow, "name" | "image_large" | "image_small" | "cm_url"> }) {
   const cm = cardmarketLink(card);
   return (
-    <div className="mt-2 space-y-4">
+    <div className="mt-2 space-y-8">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={card.image_large || card.image_small}

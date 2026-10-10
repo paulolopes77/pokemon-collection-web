@@ -8,7 +8,7 @@ import { normalizeCode } from "@/lib/invite";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { errorMessage } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import { fillSetPrices, refreshCard, syncSetCards, syncSets } from "@/lib/sync";
+import { cardTextColumnExists, fillSetPrices, refreshCard, syncSetCards, syncSets, syncSetText } from "@/lib/sync";
 
 export type ActionResult = { ok: boolean; message?: string; note?: string | null };
 
@@ -215,4 +215,22 @@ export async function requestPasswordReset(formData: FormData) {
     "/forgot?ok=" +
       encodeURIComponent("Se existir uma conta com esse email, enviámos um link para definir uma nova password. Vê também o spam."),
   );
+}
+
+/** Carrega o texto das cartas de um set (do catálogo estático) para a página da carta. */
+export async function loadSetTextAction(setId: string): Promise<ActionResult> {
+  try {
+    if (typeof setId !== "string" || !setId) throw new Error("Pedido inválido.");
+    await requireUser();
+    if (!(await cardTextColumnExists())) {
+      return { ok: false, message: "Falta correr a migração 0003_card_text.sql no Supabase (SQL Editor)." };
+    }
+    const n = await syncSetText(setId);
+    revalidatePath("/", "layout");
+    return n > 0
+      ? { ok: true, message: `Texto de ${n} cartas carregado.` }
+      : { ok: false, message: "Este set ainda não está no catálogo de texto." };
+  } catch (e) {
+    return { ok: false, message: msg(e) };
+  }
 }

@@ -4,7 +4,9 @@ import { buildNameQuery, toCardRow, toSetRow, type ApiCard, type ApiSet } from "
 import type { CardRow, SetRow } from "./types";
 
 const BASE = "https://api.pokemontcg.io/v2";
-const CARD_FIELDS = "id,name,supertype,subtypes,hp,types,rarity,number,artist,set,images,cardmarket";
+const CARD_FIELDS =
+  "id,name,supertype,subtypes,hp,types,rarity,number,artist,set,images,cardmarket," +
+  "abilities,attacks,weaknesses,resistances,retreatCost,rules,flavorText,evolvesFrom,regulationMark";
 const ATTEMPTS = 3;
 const TIMEOUT_MS = 20_000;
 

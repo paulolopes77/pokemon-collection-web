@@ -9,6 +9,19 @@ export type SetRow = {
   symbol_url: string;
 };
 
+/** Texto da carta (em inglês), tal como vem da Pokémon TCG API / catálogo estático. */
+export type CardText = {
+  abilities: { name: string; text: string; type: string }[];
+  attacks: { name: string; cost: string[]; damage: string; text: string }[];
+  weaknesses: { type: string; value: string }[];
+  resistances: { type: string; value: string }[];
+  retreat: string[];
+  rules: string[];
+  flavor: string | null;
+  evolvesFrom: string | null;
+  regulationMark: string | null;
+};
+
 export type CardRow = {
   id: string;
   name: string;
@@ -34,6 +47,8 @@ export type CardRow = {
   avg30: number | null;
   reverse_trend: number | null;
   price_source: string | null;
+  /** null = ainda não descarregado (ou a coluna card_text não existe: ver migração 0003) */
+  card_text?: CardText | null;
   fetched_at: string;
 };
 

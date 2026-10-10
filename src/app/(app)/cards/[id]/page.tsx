@@ -2,9 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CardActions } from "@/components/CardActions";
 import { CardImagePanel } from "@/components/CardImagePanel";
+import { CardTextPanel } from "@/components/CardTextPanel";
+import { SyncButton } from "@/components/SyncButton";
+import { hasCardText } from "@/lib/energy";
 import { PriceChart, type PricePoint } from "@/components/PriceChart";
 import { eur } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
+import { loadSetTextAction } from "@/app/actions";
 import { BASIS_LABELS, referencePrice, type CardRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -70,6 +74,16 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
         {quantity > 0 && price != null && (
           <p className="text-sm text-zinc-500">Valor das tuas cópias: {eur(price * quantity)}</p>
         )}
+
+        {hasCardText(card.card_text) ? (
+          <CardTextPanel text={card.card_text!} />
+        ) : card.set_id && card.card_text == null ? (
+          <section className="card-box space-y-2">
+            <h2 className="font-semibold">Texto da carta</h2>
+            <SyncButton action={loadSetTextAction.bind(null, card.set_id)} label="Carregar texto da carta" auto />
+            <p className="text-xs text-zinc-500">Em inglês, a partir do catálogo da Pokémon TCG.</p>
+          </section>
+        ) : null}
 
         <section className="card-box space-y-1">
           <h2 className="font-semibold">Preços Cardmarket</h2>

@@ -20,8 +20,10 @@ export async function saveCards(cards: CardRow[]): Promise<void> {
   if (e1) throw e1;
   const prev = new Map((existing as CardRow[] | null)?.map((c) => [c.id, c]));
 
-  const rows = cards.map((c) => {
-    const old = prev.get(c.id);
+  const rows = cards.map((c0) => {
+    const old = prev.get(c0.id);
+    // Sem texto novo (ex.: resposta parcial da API), mantém o que já tínhamos.
+    const c: CardRow = c0.card_text == null && old?.card_text ? { ...c0, card_text: old.card_text } : c0;
     if (cardPrice(c) == null && old && cardPrice(old) != null) {
       // Sem preços novos: mantém os que já tínhamos (e a data deles, para a cache continuar a contar como antiga).
       const merged = { ...c, cm_url: c.cm_url ?? old.cm_url, fetched_at: old.fetched_at } as Record<string, unknown>;
@@ -30,9 +32,42 @@ export async function saveCards(cards: CardRow[]): Promise<void> {
     }
     return old && c.cm_url == null ? { ...c, cm_url: old.cm_url } : c;
   });
-  const { error: e2 } = await db.from("cards").upsert(rows, { onConflict: "id" });
-  if (e2) throw e2;
+  await upsertCardRows(rows);
   await recordPrices(rows);
+}
+
+/**
+ * Grava cartas. Se a base de dados ainda não tiver a coluna card_text (migração 0003 por correr),
+ * grava na mesma sem o texto, para a sincronização nunca falhar por causa disso.
+ */
+async function upsertCardRows(rows: CardRow[]): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db.from("cards").upsert(rows, { onConflict: "id" });
+  if (!error) return;
+  if (!/card_text/.test(error.message)) throw error;
+  const stripped = rows.map((r) => {
+    const copy: Partial<CardRow> = { ...r };
+    delete copy.card_text;
+    return copy;
+  });
+  const { error: retryError } = await db.from("cards").upsert(stripped, { onConflict: "id" });
+  if (retryError) throw retryError;
+}
+
+/** O texto das cartas está disponível na base de dados? (a coluna existe) */
+export async function cardTextColumnExists(): Promise<boolean> {
+  const { error } = await createAdminClient().from("cards").select("card_text").limit(1);
+  return !error;
+}
+
+/** Descarrega do catálogo estático as cartas do set (com texto) e grava-as, sem perder preços. */
+export async function syncSetText(setId: string): Promise<number> {
+  const { data: setRow } = await createAdminClient().from("sets").select("id, name").eq("id", setId).maybeSingle();
+  const set = (setRow as { id: string; name: string } | null) ?? { id: setId, name: "" };
+  const cards = await fetchStaticSetCards(set);
+  if (!cards) return 0;
+  await saveCards(cards);
+  return cards.length;
 }
 
 async function recordPrices(cards: CardRow[]): Promise<void> {

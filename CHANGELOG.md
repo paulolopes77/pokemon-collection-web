@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 0.11.0 — 2026-10-12
+- Página da carta: bloco «Texto da carta» (em inglês) com habilidades, ataques (energias coloridas, dano e texto),
+  fraqueza, resistência, recuo e regras. O texto vem do catálogo estático e fica guardado na base de dados
+  (**correr `supabase/migrations/0003_card_text.sql`**); as cartas já em cache carregam o texto na primeira visita.
+- Mais espaço entre a imagem da carta e os botões Cardmarket/TCGplayer.
+
 ## 0.10.1 — 2026-10-12
 - Removido o carrossel de imagens (e a procura de outros idiomas): a página da carta volta a ter uma só imagem,
   com sombra. Os botões Cardmarket e TCGplayer mantêm a sombra.

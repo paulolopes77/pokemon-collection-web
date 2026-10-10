@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { readFileSync } from "node:fs";
-import { buildNameQuery, numberSortKey, staticToCardRow, toCardRow, toSetRow } from "../src/lib/mappers";
+import { buildNameQuery, EMPTY_CARD_TEXT, numberSortKey, staticToCardRow, toCardRow, toCardText, toSetRow } from "../src/lib/mappers";
+import { energyInfo, hasCardText } from "../src/lib/energy";
 import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
 import { filterSets, seriesOptions, yearOptions } from "../src/lib/sets-filter";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
@@ -271,4 +272,41 @@ test("sets filters: series, year, text (name + series), owned", () => {
   assert.deepEqual(filterSets(all, { ...none, query: "scarlet" }, {}).map((s) => s.id).sort(), ["sv1", "sv2"]);
   assert.deepEqual(filterSets(all, { ...none, year: "2023", query: "evolved" }, {}).map((s) => s.id), ["sv2"]);
   assert.deepEqual(filterSets(all, { ...none, onlyOwned: true }, { sv2: 3 }).map((s) => s.id), ["sv2"]);
+});
+
+test("card text from real catalogue data (Pokémon, Trainer, Energy)", () => {
+  const cards = fixture("text-sample.json") as never[];
+  const rows = cards.map((c) => staticToCardRow(c, { id: "x", name: "X" }, new Date("2026-10-12")));
+  const by = (id: string) => rows.find((r: CardRow) => r.id === id)!;
+
+  const greninja = by("me4-122").card_text!;
+  assert.equal(greninja.abilities[0].name, "Mortal Shuriken");
+  assert.match(greninja.abilities[0].text, /Place 6 damage counters/);
+  assert.deepEqual(greninja.attacks[0].cost, ["Water", "Water"]);
+  assert.equal(greninja.attacks[0].damage, "120+");
+  assert.deepEqual(greninja.weaknesses, [{ type: "Lightning", value: "×2" }]);
+  assert.deepEqual(greninja.retreat, ["Colorless"]);
+  assert.match(greninja.rules[0], /Mega Evolution ex Rule/);
+  assert.equal(greninja.evolvesFrom, "Frogadier");
+  assert.ok(hasCardText(greninja));
+
+  const charizard = by("base1-4").card_text!;
+  assert.deepEqual(charizard.resistances, [{ type: "Fighting", value: "-30" }]);
+  assert.ok(charizard.flavor && charizard.flavor.length > 10);
+
+  const trainer = by("me5-72").card_text!;
+  assert.ok(trainer.rules.length > 0 && trainer.attacks.length === 0);
+
+  // sem campos de texto: da API fica null (não apaga o que existe); do catálogo estático fica «carregado, vazio»
+  assert.equal(toCardText({ id: "x" }), null);
+  assert.deepEqual(staticToCardRow({ id: "x" }, { id: "s", name: "S" }).card_text, EMPTY_CARD_TEXT);
+  assert.equal(hasCardText(EMPTY_CARD_TEXT), false);
+  assert.equal(hasCardText(null), false);
+});
+
+test("energy chips", () => {
+  assert.equal(energyInfo("Water").letter, "W");
+  assert.equal(energyInfo("Colorless").letter, "C");
+  assert.equal(energyInfo("Darkness").label, "Escuridão");
+  assert.equal(energyInfo("Estranha").letter, "E"); // desconhecido: usa a inicial
 });

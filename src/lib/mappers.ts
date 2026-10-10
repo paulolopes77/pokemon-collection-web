@@ -1,4 +1,4 @@
-import { cardPrice, type CardRow, type SetRow } from "./types";
+import { cardPrice, type CardRow, type CardText, type SetRow } from "./types";
 
 // ---- Pokémon TCG API (https://docs.pokemontcg.io) -------------------------
 export type ApiSet = {
@@ -23,6 +23,15 @@ export type ApiCard = {
   artist?: string | null;
   set?: ApiSet | null;
   images?: { small?: string; large?: string };
+  abilities?: { name?: string; text?: string; type?: string }[] | null;
+  attacks?: { name?: string; cost?: string[]; damage?: string; text?: string }[] | null;
+  weaknesses?: { type?: string; value?: string }[] | null;
+  resistances?: { type?: string; value?: string }[] | null;
+  retreatCost?: string[] | null;
+  rules?: string[] | null;
+  flavorText?: string | null;
+  evolvesFrom?: string | null;
+  regulationMark?: string | null;
   cardmarket?: {
     url?: string | null;
     updatedAt?: string | null;
@@ -61,6 +70,35 @@ export function toSetRow(s: ApiSet): SetRow {
   };
 }
 
+export const EMPTY_CARD_TEXT: CardText = {
+  abilities: [], attacks: [], weaknesses: [], resistances: [], retreat: [], rules: [],
+  flavor: null, evolvesFrom: null, regulationMark: null,
+};
+
+/** Texto da carta; null se a fonte não trouxe nenhum dos campos (para não apagar texto já guardado). */
+export function toCardText(c: ApiCard): CardText | null {
+  const hasAny = [c.abilities, c.attacks, c.weaknesses, c.resistances, c.retreatCost, c.rules, c.flavorText, c.evolvesFrom].some(
+    (v) => v != null,
+  );
+  if (!hasAny) return null;
+  return {
+    abilities: (c.abilities ?? []).map((a) => ({ name: a.name ?? "", text: a.text ?? "", type: a.type ?? "Ability" })),
+    attacks: (c.attacks ?? []).map((a) => ({
+      name: a.name ?? "",
+      cost: a.cost ?? [],
+      damage: a.damage ?? "",
+      text: a.text ?? "",
+    })),
+    weaknesses: (c.weaknesses ?? []).map((w) => ({ type: w.type ?? "", value: w.value ?? "" })),
+    resistances: (c.resistances ?? []).map((w) => ({ type: w.type ?? "", value: w.value ?? "" })),
+    retreat: c.retreatCost ?? [],
+    rules: c.rules ?? [],
+    flavor: c.flavorText ?? null,
+    evolvesFrom: c.evolvesFrom ?? null,
+    regulationMark: c.regulationMark ?? null,
+  };
+}
+
 export function toCardRow(c: ApiCard, now = new Date()): CardRow {
   const p = c.cardmarket?.prices;
   const trend = positiveOrNull(p?.trendPrice);
@@ -93,6 +131,7 @@ export function toCardRow(c: ApiCard, now = new Date()): CardRow {
     avg30: positiveOrNull(p?.avg30),
     reverse_trend: reverse,
     price_source: null,
+    card_text: toCardText(c),
     fetched_at: now.toISOString(),
   };
   row.price_source = cardPrice(row) != null ? "pokemontcg" : null;
@@ -115,5 +154,8 @@ export function buildNameQuery(text: string): string | null {
  * Carta do repositório estático PokemonTCG/pokemon-tcg-data (mesmos ids da API, sem preços e sem o campo `set`).
  */
 export function staticToCardRow(c: ApiCard, set: Pick<SetRow, "id" | "name">, now = new Date()): CardRow {
-  return toCardRow({ ...c, set: { id: set.id, name: set.name } }, now);
+  const row = toCardRow({ ...c, set: { id: set.id, name: set.name } }, now);
+  // O catálogo estático é completo: sem campos de texto significa «esta carta não tem texto» (e não «por carregar»).
+  row.card_text = row.card_text ?? EMPTY_CARD_TEXT;
+  return row;
 }

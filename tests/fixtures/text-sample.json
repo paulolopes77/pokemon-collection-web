@@ -1,0 +1,212 @@
+[
+ {
+  "id": "me4-122",
+  "name": "Mega Greninja ex",
+  "supertype": "Pokémon",
+  "subtypes": [
+   "Stage 2",
+   "MEGA",
+   "ex"
+  ],
+  "hp": "350",
+  "types": [
+   "Water"
+  ],
+  "rarity": "Mega Hyper Rare",
+  "number": "122",
+  "artist": "takuyoa",
+  "images": {
+   "small": "https://images.scrydex.com/pokemon/me4-122/small",
+   "large": "https://images.scrydex.com/pokemon/me4-122/large"
+  },
+  "abilities": [
+   {
+    "name": "Mortal Shuriken",
+    "text": "Once during your turn, if this Pokémon is in the Active Spot, you may discard a Basic Water Energy card from your hand in order to use this Ability. Place 6 damage counters on 1 of your opponent's Pokémon.",
+    "type": "Ability"
+   }
+  ],
+  "attacks": [
+   {
+    "name": "Ninja Spinner",
+    "cost": [
+     "Water",
+     "Water"
+    ],
+    "convertedEnergyCost": 2,
+    "damage": "120+",
+    "text": "You may put a Water Energy attached to this Pokémon into your hand and have this attack do 80 more damage."
+   }
+  ],
+  "weaknesses": [
+   {
+    "type": "Lightning",
+    "value": "×2"
+   }
+  ],
+  "retreatCost": [
+   "Colorless"
+  ],
+  "rules": [
+   "Mega Evolution ex Rule: When your Mega Evolution Pokémon ex is Knocked Out, your opponent takes 3 Prize cards."
+  ],
+  "evolvesFrom": "Frogadier",
+  "regulationMark": "J"
+ },
+ {
+  "id": "base1-2",
+  "name": "Blastoise",
+  "supertype": "Pokémon",
+  "subtypes": [
+   "Stage 2"
+  ],
+  "hp": "100",
+  "types": [
+   "Water"
+  ],
+  "rarity": "Rare Holo",
+  "number": "2",
+  "artist": "Ken Sugimori",
+  "images": {
+   "small": "https://images.pokemontcg.io/base1/2.png",
+   "large": "https://images.pokemontcg.io/base1/2_hires.png"
+  },
+  "abilities": [
+   {
+    "name": "Rain Dance",
+    "text": "As often as you like during your turn (before your attack), you may attach 1 Water Energy card to 1 of your Water Pokémon. (This doesn't use up your 1 Energy card attachment for the turn.) This power can't be used if Blastoise is Asleep, Confused, or Paralyzed.",
+    "type": "Pokémon Power"
+   }
+  ],
+  "attacks": [
+   {
+    "name": "Hydro Pump",
+    "cost": [
+     "Water",
+     "Water",
+     "Water"
+    ],
+    "convertedEnergyCost": 3,
+    "damage": "40+",
+    "text": "Does 40 damage plus 10 more damage for each Water Energy attached to Blastoise but not used to pay for this attack's Energy cost. Extra Water Energy after the 2nd doesn't count."
+   }
+  ],
+  "weaknesses": [
+   {
+    "type": "Lightning",
+    "value": "×2"
+   }
+  ],
+  "retreatCost": [
+   "Colorless",
+   "Colorless",
+   "Colorless"
+  ],
+  "flavorText": "A brutal Pokémon with pressurized water jets on its shell. They are used for high-speed tackles.",
+  "evolvesFrom": "Wartortle"
+ },
+ {
+  "id": "base1-4",
+  "name": "Charizard",
+  "supertype": "Pokémon",
+  "subtypes": [
+   "Stage 2"
+  ],
+  "hp": "120",
+  "types": [
+   "Fire"
+  ],
+  "rarity": "Rare Holo",
+  "number": "4",
+  "artist": "Mitsuhiro Arita",
+  "images": {
+   "small": "https://images.pokemontcg.io/base1/4.png",
+   "large": "https://images.pokemontcg.io/base1/4_hires.png"
+  },
+  "abilities": [
+   {
+    "name": "Energy Burn",
+    "text": "As often as you like during your turn (before your attack), you may turn all Energy attached to Charizard into Fire Energy for the rest of the turn. This power can't be used if Charizard is Asleep, Confused, or Paralyzed.",
+    "type": "Pokémon Power"
+   }
+  ],
+  "attacks": [
+   {
+    "name": "Fire Spin",
+    "cost": [
+     "Fire",
+     "Fire",
+     "Fire",
+     "Fire"
+    ],
+    "convertedEnergyCost": 4,
+    "damage": "100",
+    "text": "Discard 2 Energy cards attached to Charizard in order to use this attack."
+   }
+  ],
+  "weaknesses": [
+   {
+    "type": "Water",
+    "value": "×2"
+   }
+  ],
+  "resistances": [
+   {
+    "type": "Fighting",
+    "value": "-30"
+   }
+  ],
+  "retreatCost": [
+   "Colorless",
+   "Colorless",
+   "Colorless"
+  ],
+  "flavorText": "Spits fire that is hot enough to melt boulders. Known to unintentionally cause forest fires.",
+  "evolvesFrom": "Charmeleon"
+ },
+ {
+  "id": "me5-72",
+  "name": "Antique Armor Fossil",
+  "supertype": "Trainer",
+  "subtypes": [
+   "Item"
+  ],
+  "hp": "60",
+  "rarity": "Common",
+  "number": "72",
+  "artist": "AYUMI ODASHIMA",
+  "images": {
+   "small": "https://images.scrydex.com/pokemon/me5-72/small",
+   "large": "https://images.scrydex.com/pokemon/me5-72/large"
+  },
+  "abilities": [
+   {
+    "name": "Protective Armor",
+    "text": "As long as this Pokémon is in the Active Spot, all of your Pokémon take 10 less damage from attacks from your opponent's Pokémon (after applying Weakness and Resistance).",
+    "type": "Ability"
+   }
+  ],
+  "rules": [
+   "Play this card as if it were a 60-HP Basic Colorless Pokémon. This card can't be affected by any Special Conditions and can't retreat.\n \nAt any time during your turn, you may discard this card from play."
+  ],
+  "regulationMark": "J"
+ },
+ {
+  "id": "base1-96",
+  "name": "Double Colorless Energy",
+  "supertype": "Energy",
+  "subtypes": [
+   "Special"
+  ],
+  "rarity": "Uncommon",
+  "number": "96",
+  "artist": "Keiji Kinebuchi",
+  "images": {
+   "small": "https://images.pokemontcg.io/base1/96.png",
+   "large": "https://images.pokemontcg.io/base1/96_hires.png"
+  },
+  "rules": [
+   "Provides ColorlessColorless energy.\nDoesn't count as a basic Energy card."
+  ]
+ }
+]
