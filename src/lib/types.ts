@@ -45,7 +45,33 @@ export type OwnedCard = {
   addedAt: string;
 };
 
-/** Preço de referência (EUR): tendência do Cardmarket, com alternativas se faltar. */
-export function cardPrice(c: Pick<CardRow, "trend" | "avg_sell" | "low" | "reverse_trend">): number | null {
-  return c.trend ?? c.avg_sell ?? c.low ?? c.reverse_trend ?? null;
+export type PriceBasis = "avg30" | "avg7" | "trend" | "avg_sell" | "reverse";
+
+export const BASIS_LABELS: Record<PriceBasis, string> = {
+  avg30: "média de 30 dias",
+  avg7: "média de 7 dias",
+  trend: "tendência",
+  avg_sell: "média de venda",
+  reverse: "reverse holo (tendência)",
+};
+
+type PriceFields = Pick<CardRow, "avg30" | "avg7" | "trend" | "avg_sell" | "reverse_trend">;
+
+/**
+ * Valor da carta (EUR): a **média de 30 dias** do Cardmarket. Só se não existir (set muito recente, sem
+ * 30 dias de histórico) usa, por ordem, a média de 7 dias, a tendência, a média de venda e o reverse holo.
+ * O preço mais baixo («From») NUNCA é usado como valor da carta.
+ */
+export function referencePrice(c: PriceFields): { value: number | null; basis: PriceBasis | null } {
+  const options: [PriceBasis, number | null][] = [
+    ["avg30", c.avg30],
+    ["avg7", c.avg7],
+    ["trend", c.trend],
+    ["avg_sell", c.avg_sell],
+    ["reverse", c.reverse_trend],
+  ];
+  for (const [basis, value] of options) if (value != null && value > 0) return { value, basis };
+  return { value: null, basis: null };
 }
+
+export const cardPrice = (c: PriceFields): number | null => referencePrice(c).value;

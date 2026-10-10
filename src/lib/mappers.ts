@@ -1,4 +1,4 @@
-import type { CardRow, SetRow } from "./types";
+import { cardPrice, type CardRow, type SetRow } from "./types";
 
 // ---- Pokémon TCG API (https://docs.pokemontcg.io) -------------------------
 export type ApiSet = {
@@ -68,7 +68,7 @@ export function toCardRow(c: ApiCard, now = new Date()): CardRow {
   const low = positiveOrNull(p?.lowPrice);
   const reverse = positiveOrNull(p?.reverseHoloTrend);
   const number = c.number ?? "";
-  return {
+  const row: CardRow = {
     id: c.id,
     name: c.name ?? "",
     set_id: c.set?.id ?? "",
@@ -92,9 +92,11 @@ export function toCardRow(c: ApiCard, now = new Date()): CardRow {
     avg7: positiveOrNull(p?.avg7),
     avg30: positiveOrNull(p?.avg30),
     reverse_trend: reverse,
-    price_source: trend ?? avgSell ?? low ?? reverse ? "pokemontcg" : null,
+    price_source: null,
     fetched_at: now.toISOString(),
   };
+  row.price_source = cardPrice(row) != null ? "pokemontcg" : null;
+  return row;
 }
 
 /**

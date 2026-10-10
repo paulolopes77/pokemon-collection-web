@@ -4,7 +4,7 @@ import { CardActions } from "@/components/CardActions";
 import { PriceChart, type PricePoint } from "@/components/PriceChart";
 import { eur } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
-import { cardPrice, type CardRow } from "@/lib/types";
+import { BASIS_LABELS, referencePrice, type CardRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,19 +20,19 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
 
   const [{ data: item }, { data: history }] = await Promise.all([
     supabase.from("collection_items").select("quantity, wishlist").eq("card_id", cardId).maybeSingle(),
-    supabase.from("card_prices").select("day, trend, avg_sell, low").eq("card_id", cardId).order("day", { ascending: true }).limit(365),
+    supabase.from("card_prices").select("day, avg30, avg7, trend, avg_sell").eq("card_id", cardId).order("day", { ascending: true }).limit(365),
   ]);
   const quantity = (item as { quantity: number } | null)?.quantity ?? 0;
   const wishlist = (item as { wishlist: boolean } | null)?.wishlist ?? false;
-  const price = cardPrice(card);
+  const { value: price, basis } = referencePrice(card);
 
-  const points: PricePoint[] = ((history ?? []) as { day: string; trend: number | null; avg_sell: number | null; low: number | null }[])
-    .map((h) => ({ day: h.day, value: h.trend ?? h.avg_sell ?? h.low }))
+  const points: PricePoint[] = ((history ?? []) as { day: string; avg30: number | null; avg7: number | null; trend: number | null; avg_sell: number | null }[])
+    .map((h) => ({ day: h.day, value: h.avg30 ?? h.avg7 ?? h.trend ?? h.avg_sell }))
     .filter((p): p is PricePoint => p.value != null);
 
   const rows: [string, number | null][] = [
-    ["Tendência", card.trend],
     ["Média 30 dias", card.avg30],
+    ["Tendência", card.trend],
     ["Média 7 dias", card.avg7],
     ["Média 1 dia", card.avg1],
     ["Preço mais baixo", card.low],
@@ -74,6 +74,14 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
 
         <section className="card-box space-y-1">
           <h2 className="font-semibold">Preços Cardmarket</h2>
+          {price != null && (
+            <p className="text-sm">
+              Valor da carta: <strong>{eur(price)}</strong>{" "}
+              <span className="text-zinc-500">
+                ({basis === "avg30" ? BASIS_LABELS.avg30 : `${BASIS_LABELS[basis!]} — ainda sem média de 30 dias`})
+              </span>
+            </p>
+          )}
           {rows.every(([, v]) => v == null) ? (
             <p className="text-sm">Sem preço disponível nas duas APIs gratuitas (sets muito recentes demoram a ter preços).</p>
           ) : (
@@ -94,7 +102,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
         </section>
 
         <section className="card-box space-y-2">
-          <h2 className="font-semibold">Evolução do preço</h2>
+          <h2 className="font-semibold">Evolução do valor (média de 30 dias)</h2>
           <PriceChart points={points} />
         </section>
 

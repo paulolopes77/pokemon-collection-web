@@ -9,7 +9,7 @@ import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
 import { describeHttpFailure } from "../src/lib/http-errors";
 import { isDark, nextPref, parsePref, THEME_INIT_SCRIPT } from "../src/lib/theme";
 import { setNeedsSync } from "../src/lib/sync-rules";
-import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
+import { cardPrice, referencePrice, type CardRow, type OwnedCard } from "../src/lib/types";
 
 test("speciesFromName", () => {
   const cases: Record<string, string> = {
@@ -191,4 +191,17 @@ test("describeHttpFailure never leaks HTML", () => {
   assert.equal(describeHttpFailure("X", 429, ""), "X: demasiados pedidos (HTTP 429)");
   assert.equal(describeHttpFailure("X", 404, '{"error":"not found"}'), 'X: HTTP 404 ({"error":"not found"})');
   assert.equal(describeHttpFailure("X", 500, html), "X: HTTP 500");
+});
+
+test("reference price is the 30-day average; 'From' (low) is never the value", () => {
+  const base = { avg30: null, avg7: null, trend: null, avg_sell: null, reverse_trend: null };
+  assert.deepEqual(referencePrice({ ...base, avg30: 216.41, trend: 188.3 }), { value: 216.41, basis: "avg30" });
+  assert.deepEqual(referencePrice({ ...base, avg7: 194.83, trend: 188.3 }), { value: 194.83, basis: "avg7" });
+  assert.deepEqual(referencePrice({ ...base, trend: 188.3 }), { value: 188.3, basis: "trend" });
+  assert.deepEqual(referencePrice({ ...base, avg_sell: 181.62 }), { value: 181.62, basis: "avg_sell" });
+  assert.deepEqual(referencePrice({ ...base, avg30: 0, trend: 5 }), { value: 5, basis: "trend" });
+  assert.equal(cardPrice({ ...base, ...({ low: 144 } as object) }), null); // só «From» => sem valor
+  const row = toCardRow({ id: "x", cardmarket: { prices: { lowPrice: 144 } } });
+  assert.equal(row.low, 144);
+  assert.equal(row.price_source, null);
 });

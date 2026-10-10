@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.6.0 — 2026-10-12
+- O valor da carta passa a ser a **média de 30 dias** do Cardmarket (se não existir: média de 7 dias, tendência,
+  média de venda, reverse holo). O preço mais baixo («From») deixa de ser usado como valor.
+- A página da carta indica em que se baseia o valor; o gráfico mostra a evolução da média de 30 dias.
+
 ## 0.5.2 — 2026-10-12
 - Fundo com padrão de pokébolas em tons de cinzento e uma pokébola grande esbatida (claro e escuro);
   cartões e campos ligeiramente translúcidos para manter a leitura.

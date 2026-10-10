@@ -76,9 +76,10 @@ export async function fillSetPrices(setId: string, budgetMs: number): Promise<Se
     .from("cards")
     .select("*")
     .eq("set_id", setId)
+    .is("avg30", null)
+    .is("avg7", null)
     .is("trend", null)
     .is("avg_sell", null)
-    .is("low", null)
     .is("reverse_trend", null);
   if (error) throw error;
   const missing = (missingData ?? []) as CardRow[];
@@ -190,7 +191,7 @@ export async function refreshTracked(budgetMs: number, maxCards = 200): Promise<
     }
   }
   // Cartas que a API principal continua a não ter preço: TCGdex (máx. 10 por execução).
-  const { data: missing } = await db.from("cards").select("*").in("id", ordered).is("trend", null).is("avg_sell", null).is("low", null).limit(10);
+  const { data: missing } = await db.from("cards").select("*").in("id", ordered).is("avg30", null).is("avg7", null).is("trend", null).is("avg_sell", null).is("reverse_trend", null).limit(10);
   for (const c of (missing ?? []) as CardRow[]) {
     if (Date.now() - start > budgetMs) break;
     await fillMissingPrice(c);
