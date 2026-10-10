@@ -71,7 +71,7 @@ O site é **fechado**: só entra quem tiver conta. Há duas formas de criar cont
   **Authentication → URL Configuration → Redirect URLs**. O link deve ser aberto no mesmo navegador em que foi pedido.
 
 Cada utilizador só vê e altera a **sua** coleção (RLS); sets, cartas e preços são partilhados.
-Migrações: `0001_init.sql` (esquema), `0002_invites.sql` (convites) e `0003_card_text.sql` (texto das cartas) — corre-as por esta ordem no SQL Editor.
+Migrações: `0001_init.sql` (esquema), `0002_invites.sql` (convites) e `0003_card_text.sql` (texto das cartas) e `0004_sharing.sql` (partilha da coleção) — corre-as por esta ordem no SQL Editor.
 
 ## Desenvolvimento
 

@@ -8,6 +8,7 @@ const NAV = [
   { href: "/sets", label: "Sets" },
   { href: "/search", label: "Pesquisar" },
   { href: "/wishlist", label: "Wishlist" },
+  { href: "/shared", label: "Partilhado comigo" },
   { href: "/account", label: "Conta" },
 ];
 

@@ -234,3 +234,39 @@ export async function loadSetTextAction(setId: string): Promise<ActionResult> {
     return { ok: false, message: msg(e) };
   }
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Partilha (ou deixa de partilhar) a minha coleção, só em leitura, com outro utilizador. */
+export async function setShare(viewerId: string, on: boolean): Promise<ActionResult> {
+  try {
+    if (typeof viewerId !== "string" || !UUID.test(viewerId)) throw new Error("Pedido inválido.");
+    const supabase = await requireUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user || user.id === viewerId) throw new Error("Pedido inválido.");
+    const { error } = on
+      ? await supabase.from("collection_shares").upsert({ owner_id: user.id, viewer_id: viewerId }, { onConflict: "owner_id,viewer_id", ignoreDuplicates: true })
+      : await supabase.from("collection_shares").delete().eq("owner_id", user.id).eq("viewer_id", viewerId);
+    if (error) throw new Error(error.message);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, message: msg(e) };
+  }
+}
+
+/** Nome visível (mostrado na lista de partilha). */
+export async function updateDisplayName(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 40) redirect("/account?error=" + encodeURIComponent("O nome deve ter entre 2 e 40 caracteres."));
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { error } = await supabase.from("profiles").upsert({ id: user.id, display_name: name }, { onConflict: "id" });
+  if (error) redirect("/account?error=" + encodeURIComponent(error.message));
+  redirect("/account?ok=" + encodeURIComponent("Nome guardado."));
+}

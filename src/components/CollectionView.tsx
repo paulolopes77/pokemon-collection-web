@@ -16,7 +16,7 @@ import {
   type SortMode,
 } from "@/lib/grouping";
 
-export function CollectionView({ items, wishlist }: { items: OwnedCard[]; wishlist: boolean }) {
+export function CollectionView({ items, wishlist, readOnly = false }: { items: OwnedCard[]; wishlist: boolean; readOnly?: boolean }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortMode>("recent");
   const [group, setGroup] = useState<GroupMode>("set");
@@ -60,7 +60,9 @@ export function CollectionView({ items, wishlist }: { items: OwnedCard[]; wishli
   if (items.length === 0) {
     return (
       <p className="py-16 text-center text-zinc-500">
-        {wishlist
+        {readOnly
+          ? "Esta coleção ainda não tem cartas."
+          : wishlist
           ? "Ainda não marcaste nenhuma carta. Abre uma carta e escolhe «Adicionar à wishlist»."
           : "A coleção está vazia. Usa «Sets» ou «Pesquisar» para adicionar cartas."}
       </p>
@@ -157,7 +159,7 @@ export function CollectionView({ items, wishlist }: { items: OwnedCard[]; wishli
                 <span aria-hidden>{r.collapsed ? "▾" : "▴"}</span>
               </button>
             ) : (
-              <CardTile key={`c:${r.groupKey}|${r.row.card.id}`} card={r.row.card} quantity={r.row.quantity} showAdd={!wishlist} />
+              <CardTile key={`c:${r.groupKey}|${r.row.card.id}`} card={r.row.card} quantity={r.row.quantity} showAdd={!wishlist && !readOnly} />
             ),
           )}
         </div>

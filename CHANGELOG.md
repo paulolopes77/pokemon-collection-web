@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.15.0 — 2026-10-12
+- Partilha da coleção (só leitura): na página Coleção, caixa «Partilhar» com os utilizadores do site e uma caixa de
+  seleção para cada um; novo menu «Partilhado comigo» com a lista de quem partilhou e a coleção de cada um em modo leitura.
+- Conta: «Nome visível» (é o nome mostrado aos outros utilizadores; o email não é exposto).
+- Migração `0004_sharing.sql` (perfis, partilhas e leitura segura); testada num Postgres real (PGlite).
+- Atualizar cartas e preços do set: Pokémon TCG API por ids + TCGdex + pesquisa carta a carta.
+- Página da carta: «Voltar» regressa à página anterior (Coleção, Wishlist…); sem aviso de «sem preço» quando já há preço.
+
 ## 0.14.0 — 2026-10-12
 - Coleção e Wishlist: agrupar também por raridade, elemento, estágio e ilustrador; ordenar também por HP; os cinco
   filtros do set (Pokémon, Estágio, Elemento, Raridade, Ilustrador, condicionados entre si) com «Limpar filtros».
