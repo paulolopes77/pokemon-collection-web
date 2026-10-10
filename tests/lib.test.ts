@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
-import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
+import { readFileSync } from "node:fs";
+import { buildNameQuery, numberSortKey, staticToCardRow, toCardRow, toSetRow } from "../src/lib/mappers";
 import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
@@ -220,4 +221,29 @@ test("market links", () => {
     tcgplayerLink({ name: "Mr. Mime" }),
     "https://www.tcgplayer.com/search/pokemon/product?productLineName=pokemon&q=Mr.%20Mime&view=grid",
   );
+});
+
+// Amostras REAIS do repositório PokemonTCG/pokemon-tcg-data (ficheiros estáticos usados como catálogo).
+const fixture = (name: string) => JSON.parse(readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8"));
+
+test("static catalogue: cards map like API cards (same ids, no prices)", () => {
+  const cards = fixture("me5-sample.json");
+  const rows = cards.map((c: never) => staticToCardRow(c, { id: "me5", name: "Pitch Black" }, new Date("2026-10-12")));
+  const darkrai = rows.find((r: CardRow) => r.number === "116");
+  assert.equal(darkrai.id, "me5-116");
+  assert.equal(darkrai.name, "Mega Darkrai ex");
+  assert.equal(darkrai.set_id, "me5");
+  assert.equal(darkrai.set_name, "Pitch Black");
+  assert.equal(darkrai.rarity, "Special Illustration Rare");
+  assert.equal(darkrai.number_sort, 116);
+  assert.match(darkrai.image_small, /^https:\/\//); // sets recentes usam images.scrydex.com
+  assert.equal(cardPrice(darkrai), null); // sem preços: vêm da API / TCGdex
+  assert.equal(darkrai.price_source, null);
+});
+
+test("static catalogue: sets map, including null printedTotal", () => {
+  const sets = fixture("sets-sample.json").map(toSetRow);
+  const me5 = sets.find((s: { id: string }) => s.id === "me5");
+  assert.deepEqual([me5.name, me5.total, me5.printed_total, me5.release_date], ["Pitch Black", 120, 84, "2026/07/17"]);
+  assert.equal(sets.find((s: { id: string }) => s.id === "me55c").printed_total, 0);
 });

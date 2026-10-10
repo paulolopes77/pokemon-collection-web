@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.8.0 — 2026-10-12
+- Catálogo fiável: a lista de sets e as cartas de cada set vêm do repositório público PokemonTCG/pokemon-tcg-data
+  (ficheiros estáticos, todas as cartas de uma vez). A Pokémon TCG API (que dá 500/502) passa a servir só para
+  preços, sem insistir quando falha; a TCGdex preenche o que faltar. Os preços já guardados nunca se perdem.
+
 ## 0.7.1 — 2026-10-12
 - Página da carta: sombra na imagem; botões Cardmarket e TCGplayer por baixo da imagem.
 

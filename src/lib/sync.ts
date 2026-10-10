@@ -2,6 +2,7 @@ import "server-only";
 import { errorMessage } from "./errors";
 import { createAdminClient } from "./supabase/admin";
 import { fetchCardsByIds, fetchSetCardsPage, fetchSets, ApiError } from "./pokemontcg";
+import { fetchStaticSetCards, fetchStaticSets } from "./staticdata";
 import { fetchCardPrices, findSetId, listSetCards, lookupPrices } from "./tcgdex";
 import { normalizeNumber } from "./tcgdex-rules";
 import { cardPrice, type CardRow } from "./types";
@@ -22,11 +23,12 @@ export async function saveCards(cards: CardRow[]): Promise<void> {
   const rows = cards.map((c) => {
     const old = prev.get(c.id);
     if (cardPrice(c) == null && old && cardPrice(old) != null) {
-      const merged = { ...c } as Record<string, unknown>;
+      // Sem preços novos: mantém os que já tínhamos (e a data deles, para a cache continuar a contar como antiga).
+      const merged = { ...c, cm_url: c.cm_url ?? old.cm_url, fetched_at: old.fetched_at } as Record<string, unknown>;
       for (const k of PRICE_KEYS) merged[k] = old[k];
       return merged as CardRow;
     }
-    return c;
+    return old && c.cm_url == null ? { ...c, cm_url: old.cm_url } : c;
   });
   const { error: e2 } = await db.from("cards").upsert(rows, { onConflict: "id" });
   if (e2) throw e2;
@@ -44,24 +46,66 @@ async function recordPrices(cards: CardRow[]): Promise<void> {
 }
 
 export async function syncSets(): Promise<number> {
-  const sets = await fetchSets();
+  // 1) catálogo estático (rápido e fiável)  2) Pokémon TCG API como alternativa
+  let sets = await fetchStaticSets();
+  if (!sets) sets = await fetchSets();
   const { error } = await createAdminClient().from("sets").upsert(sets, { onConflict: "id" });
   if (error) throw error;
   return sets.length;
 }
 
-export async function syncSetCards(setId: string): Promise<number> {
+export type SetSyncResult = {
+  cards: number;
+  /** de onde vieram as cartas */
+  source: "catálogo estático" | "Pokémon TCG API";
+  /** estado dos preços vindos da Pokémon TCG API */
+  prices: "ok" | "parcial" | "indisponível";
+  note: string | null;
+};
+
+/**
+ * Sincroniza as cartas de um set. As cartas vêm do catálogo estático (fiável, todas de uma vez); depois tenta-se,
+ * sem insistir, a Pokémon TCG API para os preços. Se o set ainda não estiver no catálogo estático, usa a API.
+ */
+export async function syncSetCards(setId: string, budgetMs = 25_000): Promise<SetSyncResult> {
+  const db = createAdminClient();
+  const { data: setRow } = await db.from("sets").select("id, name").eq("id", setId).maybeSingle();
+  const set = (setRow as { id: string; name: string } | null) ?? { id: setId, name: "" };
+  const start = Date.now();
+
+  const staticCards = await fetchStaticSetCards(set);
+  if (staticCards) await saveCards(staticCards);
+
   const PAGE = 50;
+  let fetched = 0;
   let page = 1;
-  let total = 0;
+  let apiError: string | null = null;
   for (;;) {
-    const { cards, totalCount } = await fetchSetCardsPage(setId, page, PAGE);
-    await saveCards(cards);
-    total += cards.length;
-    if (cards.length === 0 || page * PAGE >= totalCount) break;
-    page++;
+    if (Date.now() - start > budgetMs) {
+      apiError = "tempo esgotado";
+      break;
+    }
+    try {
+      // sem insistir: se a API estiver em baixo, não bloqueia o resto
+      const { cards, totalCount } = await fetchSetCardsPage(setId, page, PAGE, { attempts: 1, timeoutMs: 12_000 });
+      await saveCards(cards);
+      fetched += cards.length;
+      if (cards.length === 0 || page * PAGE >= totalCount) break;
+      page++;
+    } catch (e) {
+      apiError = errorMessage(e);
+      break;
+    }
   }
-  return total;
+
+  if (!staticCards && fetched === 0) throw new Error(apiError ?? "Não foi possível obter as cartas deste set.");
+  const { count } = await db.from("cards").select("id", { count: "exact", head: true }).eq("set_id", setId);
+  return {
+    cards: count ?? staticCards?.length ?? fetched,
+    source: staticCards ? "catálogo estático" : "Pokémon TCG API",
+    prices: apiError == null ? "ok" : fetched > 0 ? "parcial" : "indisponível",
+    note: apiError,
+  };
 }
 
 export type SetPriceFill = { filled: number; remaining: number; note: string | null };

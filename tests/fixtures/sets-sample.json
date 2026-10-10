@@ -1,0 +1,38 @@
+[
+ {
+  "id": "base1",
+  "name": "Base",
+  "series": "Base",
+  "printedTotal": 102,
+  "total": 102,
+  "releaseDate": "1999/01/09",
+  "images": {
+   "symbol": "https://images.pokemontcg.io/base1/symbol.png",
+   "logo": "https://images.pokemontcg.io/base1/logo.png"
+  }
+ },
+ {
+  "id": "me5",
+  "name": "Pitch Black",
+  "series": "Mega Evolution",
+  "printedTotal": 84,
+  "total": 120,
+  "releaseDate": "2026/07/17",
+  "images": {
+   "symbol": "https://images.scrydex.com/pokemon/me5-symbol/symbol",
+   "logo": "https://images.scrydex.com/pokemon/me5-logo/logo"
+  }
+ },
+ {
+  "id": "me55c",
+  "name": "30th Celebration: Classic Collection",
+  "series": "Mega Evolution",
+  "printedTotal": null,
+  "total": 30,
+  "releaseDate": "2026/09/16",
+  "images": {
+   "symbol": "https://images.scrydex.com/pokemon/me55c-symbol/symbol",
+   "logo": "https://images.scrydex.com/pokemon/me55c-logo/logo"
+  }
+ }
+]

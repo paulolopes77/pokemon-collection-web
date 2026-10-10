@@ -75,16 +75,18 @@ export async function syncSetAction(setId: string): Promise<ActionResult> {
     let head: string;
     let mainError: string | null = null;
     try {
-      head = `${await syncSetCards(setId)} cartas sincronizadas`;
+      const r = await syncSetCards(setId);
+      head = `${r.cards} cartas (${r.source})`;
+      if (r.prices !== "ok") head += ` · preços da Pokémon TCG API: ${r.prices}${r.note ? ` (${r.note})` : ""}`;
     } catch (e) {
       mainError = msg(e);
-      head = "Não foi possível atualizar as cartas";
+      head = "Não foi possível obter as cartas";
     }
 
     let fill = "";
     let fillFailed = false;
     try {
-      const r = await fillSetPrices(setId, mainError ? 40_000 : 25_000);
+      const r = await fillSetPrices(setId, mainError ? 40_000 : 20_000);
       fill = ` · ${priceSummary(r)}${r.note ? ` (${r.note})` : ""}`;
     } catch (e) {
       fillFailed = true;

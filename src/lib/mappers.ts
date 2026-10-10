@@ -110,3 +110,10 @@ export function buildNameQuery(text: string): string | null {
     .filter(Boolean);
   return words.length ? words.map((w) => `name:${w}*`).join(" ") : null;
 }
+
+/**
+ * Carta do repositório estático PokemonTCG/pokemon-tcg-data (mesmos ids da API, sem preços e sem o campo `set`).
+ */
+export function staticToCardRow(c: ApiCard, set: Pick<SetRow, "id" | "name">, now = new Date()): CardRow {
+  return toCardRow({ ...c, set: { id: set.id, name: set.name } }, now);
+}

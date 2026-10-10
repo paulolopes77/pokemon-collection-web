@@ -1,0 +1,42 @@
+[
+ {
+  "id": "me5-1",
+  "name": "Tropius",
+  "supertype": "Pokémon",
+  "subtypes": [
+   "Basic"
+  ],
+  "hp": "110",
+  "types": [
+   "Grass"
+  ],
+  "rarity": "Common",
+  "number": "1",
+  "artist": "Akino Fukuji",
+  "images": {
+   "small": "https://images.scrydex.com/pokemon/me5-1/small",
+   "large": "https://images.scrydex.com/pokemon/me5-1/large"
+  }
+ },
+ {
+  "id": "me5-116",
+  "name": "Mega Darkrai ex",
+  "supertype": "Pokémon",
+  "subtypes": [
+   "Basic",
+   "MEGA",
+   "ex"
+  ],
+  "hp": "280",
+  "types": [
+   "Darkness"
+  ],
+  "rarity": "Special Illustration Rare",
+  "number": "116",
+  "artist": "AKIRA EGAWA",
+  "images": {
+   "small": "https://images.scrydex.com/pokemon/me5-116/small",
+   "large": "https://images.scrydex.com/pokemon/me5-116/large"
+  }
+ }
+]
