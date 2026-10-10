@@ -7,10 +7,12 @@ import type { CardRow } from "@/lib/types";
 export function SetCardsView({
   cards,
   quantities,
+  wishlists,
   missingPrices,
 }: {
   cards: CardRow[];
   quantities: Record<string, number>;
+  wishlists: Record<string, boolean>;
   missingPrices: number;
 }) {
   const [onlyMissing, setOnlyMissing] = useState(false);
@@ -31,7 +33,7 @@ export function SetCardsView({
       </div>
       <div className="card-grid">
         {visible.map((c) => (
-          <CardTile key={c.id} card={c} quantity={quantities[c.id] ?? 0} dimIfMissing />
+          <CardTile key={c.id} card={c} quantity={quantities[c.id] ?? 0} wishlist={wishlists[c.id] ?? false} dimIfMissing showWishlist />
         ))}
       </div>
     </div>

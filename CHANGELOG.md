@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 0.7.0 — 2026-10-12
+- Sets e pesquisa: ícone de coração para adicionar/remover da wishlist (a par do «+»); quantidade e wishlist
+  atualizam logo no ecrã.
+- Cabeçalhos dos grupos com contorno para se distinguirem do fundo.
+- A pokébola grande do fundo roda conforme se faz scroll (parada com «reduzir movimento»).
+
 ## 0.6.0 — 2026-10-12
 - O valor da carta passa a ser a **média de 30 dias** do Cardmarket (se não existir: média de 7 dias, tendência,
   média de venda, reverse holo). O preço mais baixo («From») deixa de ser usado como valor.

@@ -13,13 +13,29 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url("/bg/pokeball-big-light.svg"), url("/bg/pokeball-tile-light.svg");
-  background-repeat: no-repeat, repeat;
-  background-position: right -10vmin bottom -10vmin, 0 0;
-  background-size: min(80vmin, 760px), 240px 240px;
+  background-image: url("/bg/pokeball-tile-light.svg");
+  background-repeat: repeat;
+  background-size: 240px 240px;
 }
 .dark body::before {
-  background-image: url("/bg/pokeball-big-dark.svg"), url("/bg/pokeball-tile-dark.svg");
+  background-image: url("/bg/pokeball-tile-dark.svg");
+}
+
+/* Pokébola grande, esbatida, que roda com o scroll (--spin, em graus, é definido por ScrollSpinBall). */
+.bg-ball {
+  position: fixed;
+  right: -10vmin;
+  bottom: -10vmin;
+  width: min(80vmin, 760px);
+  aspect-ratio: 1;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/bg/pokeball-big-light.svg") center / contain no-repeat;
+  transform: rotate(calc(var(--spin, 0) * 1deg));
+  will-change: transform;
+}
+.dark .bg-ball {
+  background-image: url("/bg/pokeball-big-dark.svg");
 }
 
 @layer components {

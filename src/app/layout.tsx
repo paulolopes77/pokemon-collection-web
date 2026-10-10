@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { ScrollSpinBall } from "@/components/ScrollSpinBall";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -14,7 +15,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <ScrollSpinBall />
+        {children}
+      </body>
     </html>
   );
 }

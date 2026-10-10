@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { CardTile } from "./CardTile";
 import type { CardRow } from "@/lib/types";
 
-type Result = { cards: CardRow[]; quantities: Record<string, number> };
+type Result = { cards: CardRow[]; quantities: Record<string, number>; wishlists: Record<string, boolean> };
 
 export function SearchView() {
   const [query, setQuery] = useState("");
@@ -51,7 +51,7 @@ export function SearchView() {
       {result && result.cards.length > 0 && (
         <div className="card-grid">
           {result.cards.map((c) => (
-            <CardTile key={c.id} card={c} quantity={result.quantities[c.id] ?? 0} />
+            <CardTile key={c.id} card={c} quantity={result.quantities[c.id] ?? 0} wishlist={result.wishlists?.[c.id] ?? false} showWishlist />
           ))}
         </div>
       )}

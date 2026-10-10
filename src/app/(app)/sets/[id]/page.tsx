@@ -31,6 +31,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
   const cards = (data ?? []) as CardRow[];
   const items = await loadItemsFor(supabase, cards.map((c) => c.id));
   const quantities = Object.fromEntries(Object.entries(items).map(([cid, i]) => [cid, i.quantity]));
+  const wishlists = Object.fromEntries(Object.entries(items).map(([cid, i]) => [cid, i.wishlist]));
 
   const oldest = cards.reduce<string | null>((m, c) => (m === null || c.fetched_at < m ? c.fetched_at : m), null);
   const needsSync = setNeedsSync(cards.length, s.total, oldest);
@@ -54,7 +55,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
       {cards.length === 0 ? (
         <p className="py-10 text-center text-zinc-500">A carregar cartas da Pokémon TCG API…</p>
       ) : (
-        <SetCardsView cards={cards} quantities={quantities} missingPrices={missingPrices} />
+        <SetCardsView cards={cards} quantities={quantities} wishlists={wishlists} missingPrices={missingPrices} />
       )}
     </>
   );

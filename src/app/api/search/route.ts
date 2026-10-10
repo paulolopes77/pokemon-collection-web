@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
     await saveCards(cards); // fica em cache para poder ser adicionada à coleção
     const items = await loadItemsFor(supabase, cards.map((c) => c.id));
     const quantities = Object.fromEntries(Object.entries(items).map(([id, i]) => [id, i.quantity]));
-    return NextResponse.json({ cards, quantities });
+    const wishlists = Object.fromEntries(Object.entries(items).map(([id, i]) => [id, i.wishlist]));
+    return NextResponse.json({ cards, quantities, wishlists });
   } catch (e) {
     return NextResponse.json({ error: errorMessage(e) }, { status: 502 });
   }
