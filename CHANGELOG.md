@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.9.0 — 2026-10-12
+- Sets: filtros por série e por ano; campo de texto mais curto («Procurar por SET», continua a procurar também na
+  série); cada set é um cartão com contorno e sombra, em grelha de 1 a 3 colunas.
+
 ## 0.8.0 — 2026-10-12
 - Catálogo fiável: a lista de sets e as cartas de cada set vêm do repositório público PokemonTCG/pokemon-tcg-data
   (ficheiros estáticos, todas as cartas de uma vez). A Pokémon TCG API (que dá 500/502) passa a servir só para

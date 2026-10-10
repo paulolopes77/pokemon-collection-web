@@ -5,6 +5,7 @@ import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { readFileSync } from "node:fs";
 import { buildNameQuery, numberSortKey, staticToCardRow, toCardRow, toSetRow } from "../src/lib/mappers";
 import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
+import { filterSets, seriesOptions, yearOptions } from "../src/lib/sets-filter";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
 import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
@@ -246,4 +247,28 @@ test("static catalogue: sets map, including null printedTotal", () => {
   const me5 = sets.find((s: { id: string }) => s.id === "me5");
   assert.deepEqual([me5.name, me5.total, me5.printed_total, me5.release_date], ["Pitch Black", 120, 84, "2026/07/17"]);
   assert.equal(sets.find((s: { id: string }) => s.id === "me55c").printed_total, 0);
+});
+
+test("sets filters: series, year, text (name + series), owned", () => {
+  const sets = (fixture("sets-sample.json") as never[]).map(toSetRow);
+  const extra = [
+    { id: "sv1", name: "Scarlet & Violet", series: "Scarlet & Violet", release_date: "2023/03/31" },
+    { id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet", release_date: "2023/06/09" },
+    { id: "ex1", name: "Ruby & Sapphire", series: "EX", release_date: "2003/06/18" },
+  ].map((s) => ({ ...s, printed_total: 0, total: 0, logo_url: "", symbol_url: "" }));
+  const all = [...sets, ...extra];
+  const none = { query: "", series: "", year: "", onlyOwned: false };
+
+  assert.deepEqual(yearOptions(all), ["2026", "2023", "2003", "1999"]);
+  assert.deepEqual(seriesOptions(all)[0], "Mega Evolution"); // série do set mais recente primeiro
+  assert.ok(seriesOptions(all).includes("EX") && seriesOptions(all).includes("Base"));
+
+  assert.equal(filterSets(all, none, {}).length, all.length);
+  assert.deepEqual(filterSets(all, { ...none, year: "2023" }, {}).map((s) => s.id).sort(), ["sv1", "sv2"]);
+  assert.deepEqual(filterSets(all, { ...none, series: "EX" }, {}).map((s) => s.id), ["ex1"]);
+  // o texto procura no nome do set e também na série
+  assert.deepEqual(filterSets(all, { ...none, query: "paldea" }, {}).map((s) => s.id), ["sv2"]);
+  assert.deepEqual(filterSets(all, { ...none, query: "scarlet" }, {}).map((s) => s.id).sort(), ["sv1", "sv2"]);
+  assert.deepEqual(filterSets(all, { ...none, year: "2023", query: "evolved" }, {}).map((s) => s.id), ["sv2"]);
+  assert.deepEqual(filterSets(all, { ...none, onlyOwned: true }, { sv2: 3 }).map((s) => s.id), ["sv2"]);
 });
