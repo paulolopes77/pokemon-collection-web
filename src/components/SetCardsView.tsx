@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CardTile } from "./CardTile";
 import { CARD_SORT_LABELS, defaultDir, sortCards, type CardSortKey, type SortDir } from "@/lib/card-sort";
+import { useViewMemory } from "@/lib/use-view-memory";
 import { FilterPanel } from "./FilterPanel";
 import { activeFilterCount, applyCardFilters, filterOptions, NO_FILTERS, type CardFilters } from "@/lib/card-filters";
 import type { CardRow } from "@/lib/types";
@@ -32,6 +33,14 @@ export function SetCardsView({
   const [open, setOpen] = useState(false);
   const [sortKey, setSortKey] = useState<CardSortKey>("number");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  useViewMemory({ onlyMissing, filters, open, sortKey, sortDir }, (s) => {
+    if (typeof s.onlyMissing === "boolean") setOnlyMissing(s.onlyMissing);
+    if (s.filters) setFilters({ ...NO_FILTERS, ...s.filters });
+    if (typeof s.open === "boolean") setOpen(s.open);
+    if (s.sortKey && s.sortKey in CARD_SORT_LABELS) setSortKey(s.sortKey);
+    if (s.sortDir === "asc" || s.sortDir === "desc") setSortDir(s.sortDir);
+  });
 
   const options = useMemo(() => filterOptions(cards, filters), [cards, filters]);
   const active = activeFilterCount(filters);

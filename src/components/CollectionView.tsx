@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { CardTile } from "./CardTile";
 import { FilterPanel } from "./FilterPanel";
 import { eur, int } from "@/lib/money";
+import { useViewMemory } from "@/lib/use-view-memory";
 import { cardPrice, type OwnedCard } from "@/lib/types";
 import { activeFilterCount, filterOptions, matchesFilters, NO_FILTERS, type CardFilters } from "@/lib/card-filters";
 import {
@@ -24,6 +25,19 @@ export function CollectionView({ items, wishlist, readOnly = false }: { items: O
   const [filters, setFilters] = useState<CardFilters>(NO_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
   const [onlyDuplicates, setOnlyDuplicates] = useState(false);
+
+  useViewMemory(
+    { query, sort, group, collapsed: [...collapsed], filters, showFilters, onlyDuplicates },
+    (s) => {
+      if (typeof s.query === "string") setQuery(s.query);
+      if (s.sort && s.sort in SORT_LABELS) setSort(s.sort);
+      if (s.group && s.group in GROUP_LABELS) setGroup(s.group);
+      if (Array.isArray(s.collapsed)) setCollapsed(new Set(s.collapsed));
+      if (s.filters) setFilters({ ...NO_FILTERS, ...s.filters });
+      if (typeof s.showFilters === "boolean") setShowFilters(s.showFilters);
+      if (typeof s.onlyDuplicates === "boolean") setOnlyDuplicates(s.onlyDuplicates);
+    },
+  );
 
   const totals = useMemo(() => {
     const cards = items.reduce((s, i) => s + (wishlist ? 1 : i.quantity), 0);

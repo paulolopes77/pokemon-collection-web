@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.15.1 — 2026-10-12
+- Coleção, Wishlist, Sets e página de um Set: ao abrir uma carta e voltar, os filtros, pesquisa, ordenação, agrupamento, grupos recolhidos e a posição do scroll ficam como estavam (guardados enquanto o separador estiver aberto).
+
 ## 0.15.0 — 2026-10-12
 - Partilha da coleção (só leitura): na página Coleção, caixa «Partilhar» com os utilizadores do site e uma caixa de
   seleção para cada um; novo menu «Partilhado comigo» com a lista de quem partilhou e a coleção de cada um em modo leitura.

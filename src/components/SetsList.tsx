@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useViewMemory } from "@/lib/use-view-memory";
 import { filterSets, seriesOptions, yearOptions } from "@/lib/sets-filter";
 import type { SetRow } from "@/lib/types";
 
@@ -10,6 +11,13 @@ export function SetsList({ sets, owned }: { sets: SetRow[]; owned: Record<string
   const [series, setSeries] = useState("");
   const [year, setYear] = useState("");
   const [onlyOwned, setOnlyOwned] = useState(false);
+
+  useViewMemory({ query, series, year, onlyOwned }, (s) => {
+    if (typeof s.query === "string") setQuery(s.query);
+    if (typeof s.series === "string") setSeries(s.series);
+    if (typeof s.year === "string") setYear(s.year);
+    if (typeof s.onlyOwned === "boolean") setOnlyOwned(s.onlyOwned);
+  });
 
   const seriesList = useMemo(() => seriesOptions(sets), [sets]);
   const years = useMemo(() => yearOptions(sets), [sets]);
