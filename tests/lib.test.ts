@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
+import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser } from "../src/lib/admin-rules";
 import { setNeedsSync } from "../src/lib/sync-rules";
 import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
@@ -105,4 +106,20 @@ test("admin rules", () => {
   assert.equal(validateNewUser("nope", "12345678"), "Email inválido.");
   assert.match(validateNewUser("a@x.com", "123") ?? "", /pelo menos 8/);
   assert.equal(validateNewUser("a@x.com", "12345678"), null);
+});
+
+test("invite codes", () => {
+  const c = generateCode();
+  assert.match(c, /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{10}$/);
+  assert.notEqual(generateCode(), generateCode());
+  assert.equal(normalizeCode(" k7m2p-x9qrt "), "K7M2PX9QRT");
+  assert.equal(formatCode("K7M2PX9QRT"), "K7M2P-X9QRT");
+  assert.equal(normalizeCode(formatCode(c)), c);
+  const now = Date.parse("2026-10-12T00:00:00Z");
+  assert.equal(inviteState({ uses: 0, max_uses: 1, expires_at: null }, now), "ativo");
+  assert.equal(inviteState({ uses: 1, max_uses: 1, expires_at: null }, now), "esgotado");
+  assert.equal(inviteState({ uses: 0, max_uses: 1, expires_at: "2026-10-11T00:00:00Z" }, now), "expirado");
+  assert.equal(clampInt("99", 1, 50, 1), 50);
+  assert.equal(clampInt("abc", 1, 50, 7), 7);
+  assert.equal(clampInt(null, 0, 365, 7), 7);
 });

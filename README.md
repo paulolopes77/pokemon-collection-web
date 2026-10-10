@@ -19,9 +19,9 @@ Alternativa web à app Android [`pokemon-collection-android`](https://github.com
 
 ### 1. Supabase
 1. Cria o projeto (região da UE; «Enable automatic RLS» ligado).
-2. **SQL Editor** → cola o conteúdo de [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) → **Run**.
+2. **SQL Editor** → cola e corre, por ordem, [`0001_init.sql`](supabase/migrations/0001_init.sql) e [`0002_invites.sql`](supabase/migrations/0002_invites.sql).
 3. **Authentication → Users → Add user** → cria o teu utilizador (email + password, marca «Auto confirm user»).
-4. Para o site ser **só teu**: **Authentication → Sign In / Providers** → desativa «Allow new users to sign up».
+4. Deixa **desligado** «Allow new users to sign up» (**Authentication → Sign In / Providers**): as contas novas são criadas pelo servidor, com convite.
 5. Depois do deploy: **Authentication → URL Configuration** → define **Site URL** com o endereço do Vercel.
 6. **Project Settings → API**: copia o *Project URL*, a chave *anon* e a chave *service_role*.
 
@@ -35,7 +35,6 @@ Copia `.env.example` para `.env.local` (desenvolvimento) e define as mesmas no V
 | `SUPABASE_SERVICE_ROLE_KEY` | chave service_role — **só no servidor, nunca com `NEXT_PUBLIC_`** |
 | `CRON_SECRET` | texto aleatório longo (ex.: `openssl rand -hex 32`); o Vercel envia-o ao cron |
 | `ADMIN_EMAILS` | o(s) teu(s) email(s) de administrador, separados por vírgula — dá acesso à página **Utilizadores** |
-| `NEXT_PUBLIC_ALLOW_SIGNUP` | opcional: `true` ativa a página pública «Criar conta» (por omissão, desligada) |
 | `POKEMONTCG_API_KEY` | opcional (chave gratuita em <https://dev.pokemontcg.io>) |
 
 Depois de alterar variáveis, faz **Redeploy** (só afetam deploys novos).
@@ -48,19 +47,20 @@ Depois de alterar variáveis, faz **Redeploy** (só afetam deploys novos).
 Entra → **Sets** (a lista é descarregada sozinha) → abre um set (as cartas e preços são descarregados e
 ficam em cache) → adiciona cartas com `+`.
 
-## Utilizadores
+## Utilizadores e convites
 
-Por omissão o site é **fechado**: só entra quem tiver conta criada por um administrador.
+O site é **fechado**: só entra quem tiver conta. Há duas formas de criar contas, ambas geridas por um administrador
+(`ADMIN_EMAILS` com o teu email):
 
-- **Criar utilizadores (recomendado):** define `ADMIN_EMAILS` com o teu email (o utilizador tem de existir). Depois de
-  entrares aparece o separador **Utilizadores**, onde crias contas (email + password, já confirmadas) e apagas contas
-  (apagar uma conta apaga também a coleção dessa pessoa).
-- **Registo público (opcional):** põe `NEXT_PUBLIC_ALLOW_SIGNUP=true` e faz Redeploy; aparece «Criar conta» no login.
-  No Supabase tem de estar ligado **Authentication → Sign In / Providers → Allow new users to sign up**, e
-  **Authentication → URL Configuration → Redirect URLs** deve incluir `https://O-TEU-SITE/auth/callback`.
-  O Supabase envia um email de confirmação; o servidor de email por omissão tem um limite baixo de envios por hora —
-  para uso real configura um SMTP próprio (Authentication → SMTP Settings).
-- Cada utilizador só vê e altera a **sua** coleção (RLS); sets, cartas e preços são partilhados.
+- **Convites (recomendado):** na página **Utilizadores → Convites** geras um código (ex.: `K7M2P-X9QRT`) com nota,
+  número máximo de usos e validade em dias. Envias o código (ou o link `…/register?code=…`) ao teu amigo, que cria a
+  própria conta em **/register** com o código + email + password. Um código esgotado ou expirado deixa de funcionar;
+  podes apagá-lo a qualquer momento. A conta é criada já confirmada (o convite faz de verificação), por isso **não é
+  preciso email nem SMTP**, e o registo público do Supabase pode ficar **desligado**.
+- **Criação direta:** na mesma página crias uma conta (email + password) e apagas contas (apaga também a coleção).
+
+Cada utilizador só vê e altera a **sua** coleção (RLS); sets, cartas e preços são partilhados.
+Migrações: `0001_init.sql` (esquema) e `0002_invites.sql` (convites) — corre-as por esta ordem no SQL Editor.
 
 ## Desenvolvimento
 

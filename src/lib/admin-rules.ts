@@ -17,6 +17,3 @@ export function validateNewUser(email: string, password: string): string | null 
   if (password.length < MIN_PASSWORD) return `A password deve ter pelo menos ${MIN_PASSWORD} caracteres.`;
   return null;
 }
-
-/** O registo público só existe se NEXT_PUBLIC_ALLOW_SIGNUP=true. */
-export const signupEnabled = () => process.env.NEXT_PUBLIC_ALLOW_SIGNUP === "true";

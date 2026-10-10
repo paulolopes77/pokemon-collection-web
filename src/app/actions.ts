@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { signupEnabled, validateNewUser } from "@/lib/admin-rules";
+import { validateNewUser } from "@/lib/admin-rules";
+import { normalizeCode } from "@/lib/invite";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { errorMessage } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { refreshCard, syncSetCards, syncSets } from "@/lib/sync";
@@ -100,25 +101,35 @@ export async function signOut() {
   redirect("/login");
 }
 
-/** Registo público (só se NEXT_PUBLIC_ALLOW_SIGNUP=true e o Supabase permitir novos utilizadores). */
+/**
+ * Registo com convite: só cria conta quem tiver um código válido gerado por um administrador.
+ * A conta é criada já confirmada (o convite faz de verificação), por isso não precisa de email.
+ */
 export async function signUp(formData: FormData) {
-  if (!signupEnabled()) redirect("/login");
+  const code = normalizeCode(String(formData.get("code") ?? ""));
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const fail = (text: string): never =>
+    redirect(`/register?error=${encodeURIComponent(text)}&code=${encodeURIComponent(code)}`);
+
   const problem = validateNewUser(email, password);
-  if (problem) redirect("/register?error=" + encodeURIComponent(problem));
+  if (problem) return fail(problem);
 
-  const h = await headers();
-  const origin = h.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const admin = createAdminClient();
+  const { data: valid, error: rpcError } = await admin.rpc("consume_invite", { p_code: code });
+  if (rpcError || valid !== true) {
+    await new Promise((r) => setTimeout(r, 800)); // trava tentativas em massa
+    return fail("Código de convite inválido, expirado ou já usado.");
+  }
+
+  const { error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  if (error) {
+    await admin.rpc("refund_invite", { p_code: code });
+    return fail(/already|registered|exists/i.test(error.message) ? "Este email já tem conta. Entra na página de login." : error.message);
+  }
+
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { emailRedirectTo: `${origin}/auth/callback` },
-  });
-  if (error) redirect("/register?error=" + encodeURIComponent(error.message));
-
-  // Sem confirmação de email, o utilizador já tem sessão.
-  if (data.session) redirect("/");
-  redirect("/register?ok=" + encodeURIComponent("Conta criada. Confirma o email que enviámos (vê também o spam) e depois entra."));
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) redirect("/login?error=" + encodeURIComponent("Conta criada. Entra com o teu email e password."));
+  redirect("/");
 }
