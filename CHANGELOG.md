@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.11.1 — 2026-10-12
+- Página da carta: «Atualizar preço» passou para o cartão «Preços Cardmarket» (canto superior direito, na linha do
+  título); «Wishlist» passou para o cartão «Na coleção», logo a seguir ao «+», com uma barra vertical subtil.
+- O bloco de texto chama-se «Carta» e já não mostra a marca de regulamento.
+
 ## 0.11.0 — 2026-10-12
 - Página da carta: bloco «Texto da carta» (em inglês) com habilidades, ataques (energias coloridas, dano e texto),
   fraqueza, resistência, recuo e regras. O texto vem do catálogo estático e fica guardado na base de dados

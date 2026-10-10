@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CardActions } from "@/components/CardActions";
+import { CollectionBox } from "@/components/CollectionBox";
+import { PriceHeader } from "@/components/PriceHeader";
 import { CardImagePanel } from "@/components/CardImagePanel";
 import { CardTextPanel } from "@/components/CardTextPanel";
 import { SyncButton } from "@/components/SyncButton";
@@ -70,7 +71,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           {info.length > 0 && <p className="mt-1 text-xs">{info.join(" · ")}</p>}
         </div>
 
-        <CardActions cardId={card.id} quantity={quantity} wishlist={wishlist} autoRefresh={price == null} />
+        <CollectionBox cardId={card.id} quantity={quantity} wishlist={wishlist} />
         {quantity > 0 && price != null && (
           <p className="text-sm text-zinc-500">Valor das tuas cópias: {eur(price * quantity)}</p>
         )}
@@ -79,14 +80,14 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           <CardTextPanel text={card.card_text!} />
         ) : card.set_id && card.card_text == null ? (
           <section className="card-box space-y-2">
-            <h2 className="font-semibold">Texto da carta</h2>
+            <h2 className="font-semibold">Carta</h2>
             <SyncButton action={loadSetTextAction.bind(null, card.set_id)} label="Carregar texto da carta" auto />
             <p className="text-xs text-zinc-500">Em inglês, a partir do catálogo da Pokémon TCG.</p>
           </section>
         ) : null}
 
         <section className="card-box space-y-1">
-          <h2 className="font-semibold">Preços Cardmarket</h2>
+          <PriceHeader cardId={card.id} autoRefresh={price == null} />
           {price != null && (
             <p className="text-sm">
               Valor da carta: <strong>{eur(price)}</strong>{" "}

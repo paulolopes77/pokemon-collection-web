@@ -29,9 +29,9 @@ function Energies({ types }: { types: string[] }) {
 export function CardTextPanel({ text }: { text: CardText }) {
   const hasStats = text.weaknesses.length > 0 || text.resistances.length > 0 || text.retreat.length > 0;
   return (
-    <section className="card-box space-y-3" aria-label="Texto da carta">
+    <section className="card-box space-y-3" aria-label="Carta">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="font-semibold">Texto da carta</h2>
+        <h2 className="font-semibold">Carta</h2>
         <span className="text-xs text-zinc-500">em inglês</span>
       </div>
 
@@ -92,7 +92,6 @@ export function CardTextPanel({ text }: { text: CardText }) {
       )}
 
       {text.flavor && <p className="text-xs italic text-zinc-500">{text.flavor}</p>}
-      {text.regulationMark && <p className="text-xs text-zinc-500">Marca de regulamento: {text.regulationMark}</p>}
     </section>
   );
 }
