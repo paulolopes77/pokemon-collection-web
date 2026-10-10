@@ -49,7 +49,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
   const cmLink = card.cm_url ?? `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(card.name)}`;
 
   return (
-    <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr]">
+    <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr] xl:grid-cols-[minmax(0,400px)_1fr]">
       <div>
         <Link href={card.set_id ? `/sets/${encodeURIComponent(card.set_id)}` : "/"} className="text-sm text-zinc-500 underline">
           ← {card.set_name || "Voltar"}

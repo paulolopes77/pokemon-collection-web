@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { requestPasswordReset } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,7 @@ export default async function ForgotPage({ searchParams }: { searchParams: Promi
   const { error, ok } = await searchParams;
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
+      <ThemeToggle className="self-end" />
       <h1 className="text-2xl font-semibold">Recuperar password</h1>
       {ok ? (
         <p role="status" className="text-sm">{ok}</p>

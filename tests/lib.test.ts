@@ -6,6 +6,7 @@ import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
 import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
+import { isDark, nextPref, parsePref, THEME_INIT_SCRIPT } from "../src/lib/theme";
 import { setNeedsSync } from "../src/lib/sync-rules";
 import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
 
@@ -144,4 +145,38 @@ test("pickTcgdexSet / normalizeNumber", () => {
   assert.equal(pickTcgdexSet(list, "Desconhecido", 0), null);
   assert.equal(normalizeNumber("012"), "12");
   assert.equal(normalizeNumber("SWSH001"), "swsh001");
+});
+
+test("theme preference", () => {
+  assert.equal(parsePref("dark"), "dark");
+  assert.equal(parsePref("light"), "light");
+  assert.equal(parsePref("qualquer"), "system");
+  assert.equal(parsePref(null), "system");
+  assert.equal(isDark("system", true), true);
+  assert.equal(isDark("system", false), false);
+  assert.equal(isDark("light", true), false);
+  assert.equal(isDark("dark", false), true);
+  assert.deepEqual(["system", "light", "dark"].map((p) => nextPref(p as "system")), ["light", "dark", "system"]);
+});
+
+test("theme init script matches isDark for every preference", () => {
+  const run = (stored: string | null, systemDark: boolean) => {
+    let dark: boolean | null = null;
+    const g = globalThis as unknown as Record<string, unknown>;
+    const saved = { localStorage: g.localStorage, window: g.window, document: g.document };
+    g.localStorage = { getItem: () => stored };
+    g.window = { matchMedia: () => ({ matches: systemDark }) };
+    g.document = { documentElement: { classList: { toggle: (_: string, v: boolean) => (dark = v) } } };
+    try {
+      new Function(THEME_INIT_SCRIPT)();
+    } finally {
+      Object.assign(g, saved);
+    }
+    return dark;
+  };
+  for (const stored of [null, "light", "dark", "xyz"]) {
+    for (const sys of [true, false]) {
+      assert.equal(run(stored, sys), isDark(parsePref(stored), sys), `${stored}/${sys}`);
+    }
+  }
 });

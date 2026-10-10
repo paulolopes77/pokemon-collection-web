@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.5.0 — 2026-10-12
+- Largura fluida até 1600 px (mais colunas de cartas em ecrãs grandes).
+- Tema claro/escuro: botão Auto / Claro / Escuro (guarda a escolha, sem «flash» ao carregar).
+
 ## 0.4.1 — 2026-10-12
 - Sets: ao abrir ou atualizar um set, os preços em falta da Pokémon TCG API são preenchidos em bloco com a TCGdex
   (antes só carta a carta). O set mostra quantas cartas continuam sem preço.

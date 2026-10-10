@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { signUp } from "../actions";
 import { MIN_PASSWORD } from "@/lib/admin-rules";
 import { formatCode, normalizeCode } from "@/lib/invite";
@@ -13,6 +14,7 @@ export default async function RegisterPage({
   const { error, code } = await searchParams;
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
+      <ThemeToggle className="self-end" />
       <h1 className="text-2xl font-semibold">Criar conta</h1>
       <p className="text-sm text-zinc-500">O registo é só por convite. Pede o código a quem gere o site.</p>
       <form action={signUp} className="flex flex-col gap-3">

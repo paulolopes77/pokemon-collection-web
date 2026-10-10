@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { signIn } from "../actions";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
   return (
     <main className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
+      <ThemeToggle className="self-end" />
       <h1 className="text-2xl font-semibold">Coleção Pokémon</h1>
       <form action={signIn} className="flex flex-col gap-3">
         <label className="text-sm">
