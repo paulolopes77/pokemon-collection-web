@@ -9,20 +9,23 @@ export function SyncButton({
   action,
   label,
   auto = false,
+  autoAction,
 }: {
   action: () => Promise<ActionResult>;
   label: string;
   auto?: boolean;
+  /** Ação a correr automaticamente ao abrir a página (por omissão, a mesma do botão). */
+  autoAction?: () => Promise<ActionResult>;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
   const ran = useRef(false);
 
-  function run() {
+  function run(fn: () => Promise<ActionResult> = action) {
     setMessage(null);
     start(async () => {
-      const r = await action();
+      const r = await fn();
       setMessage(r.message ?? null);
       router.refresh();
     });
@@ -31,14 +34,14 @@ export function SyncButton({
   useEffect(() => {
     if (auto && !ran.current) {
       ran.current = true;
-      run();
+      run(autoAction ?? action);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto]);
 
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={run} disabled={pending} className="btn">
+      <button type="button" onClick={() => run()} disabled={pending} className="btn">
         {pending ? "A sincronizar…" : label}
       </button>
       {message && <span className="text-xs text-zinc-500">{message}</span>}

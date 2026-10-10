@@ -8,7 +8,7 @@ import { normalizeCode } from "@/lib/invite";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { errorMessage } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
-import { refreshCard, syncSetCards, syncSets } from "@/lib/sync";
+import { fillSetPrices, refreshCard, syncSetCards, syncSets } from "@/lib/sync";
 
 export type ActionResult = { ok: boolean; message?: string; note?: string | null };
 
@@ -60,14 +60,40 @@ export async function syncSetsAction(): Promise<ActionResult> {
   }
 }
 
+const priceSummary = (r: { filled: number; remaining: number }) =>
+  `${r.filled} preços preenchidos` + (r.remaining > 0 ? `, ${r.remaining} cartas ainda sem preço` : "");
+
+/** Sincroniza as cartas do set e depois preenche os preços em falta com a TCGdex. */
 export async function syncSetAction(setId: string): Promise<ActionResult> {
   try {
     if (typeof setId !== "string" || !setId) throw new Error("Pedido inválido.");
     await requireUser();
     const n = await syncSetCards(setId);
+    let fill = "";
+    try {
+      const r = await fillSetPrices(setId, 25_000);
+      fill = ` · ${priceSummary(r)}`;
+      if (r.note) fill += ` (${r.note})`;
+    } catch (e) {
+      fill = ` · preços alternativos falharam (${msg(e)})`;
+    }
     revalidatePath(`/sets/${setId}`);
     revalidatePath("/", "layout");
-    return { ok: true, message: `${n} cartas sincronizadas.` };
+    return { ok: true, message: `${n} cartas sincronizadas${fill}.` };
+  } catch (e) {
+    return { ok: false, message: msg(e) };
+  }
+}
+
+/** Só preenche os preços em falta de um set (usado ao abrir um set que já está em cache). */
+export async function fillSetPricesAction(setId: string): Promise<ActionResult> {
+  try {
+    if (typeof setId !== "string" || !setId) throw new Error("Pedido inválido.");
+    await requireUser();
+    const r = await fillSetPrices(setId, 40_000);
+    revalidatePath(`/sets/${setId}`);
+    revalidatePath("/", "layout");
+    return { ok: true, message: `${priceSummary(r)}${r.note ? ` (${r.note})` : ""}.` };
   } catch (e) {
     return { ok: false, message: msg(e) };
   }

@@ -5,6 +5,7 @@ import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
+import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
 import { setNeedsSync } from "../src/lib/sync-rules";
 import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
 
@@ -129,4 +130,18 @@ test("validatePassword", () => {
   assert.equal(validatePassword("12345678"), null);
   assert.equal(validatePassword("12345678", "12345678"), null);
   assert.equal(validatePassword("12345678", "12345679"), "As passwords não coincidem.");
+});
+
+test("pickTcgdexSet / normalizeNumber", () => {
+  const list = [
+    { id: "me03", name: "Pitch Black", cardCount: { official: 88 } },
+    { id: "sv03.5", name: "151", cardCount: { official: 165 } },
+    { id: "x1", name: "Other", cardCount: { official: 88 } },
+  ];
+  assert.equal(pickTcgdexSet(list, "Pitch Black", 0), "me03");
+  assert.equal(pickTcgdexSet(list, "Scarlet & Violet—151", 165), "sv03.5"); // pelo n.º oficial (único)
+  assert.equal(pickTcgdexSet(list, "Desconhecido", 88), null); // 2 sets com 88: ambíguo
+  assert.equal(pickTcgdexSet(list, "Desconhecido", 0), null);
+  assert.equal(normalizeNumber("012"), "12");
+  assert.equal(normalizeNumber("SWSH001"), "swsh001");
 });

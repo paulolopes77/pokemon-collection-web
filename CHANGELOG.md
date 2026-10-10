@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.4.1 — 2026-10-12
+- Sets: ao abrir ou atualizar um set, os preços em falta da Pokémon TCG API são preenchidos em bloco com a TCGdex
+  (antes só carta a carta). O set mostra quantas cartas continuam sem preço.
+
 ## 0.4.0 — 2026-10-12
 - Recuperação de password: página «Conta» (alterar a própria password), reposição pelo administrador e
   «Esqueci-me da password» por email (requer SMTP no Supabase).

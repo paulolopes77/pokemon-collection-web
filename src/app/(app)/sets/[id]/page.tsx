@@ -5,8 +5,9 @@ import { SyncButton } from "@/components/SyncButton";
 import { loadItemsFor } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 import { setNeedsSync } from "@/lib/sync-rules";
+import { cardPrice } from "@/lib/types";
 import type { CardRow, SetRow } from "@/lib/types";
-import { syncSetAction } from "../../../actions";
+import { fillSetPricesAction, syncSetAction } from "../../../actions";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -33,6 +34,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
 
   const oldest = cards.reduce<string | null>((m, c) => (m === null || c.fetched_at < m ? c.fetched_at : m), null);
   const needsSync = setNeedsSync(cards.length, s.total, oldest);
+  const missingPrices = cards.filter((c) => cardPrice(c) == null).length;
 
   return (
     <>
@@ -42,12 +44,17 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
           <h1 className="text-xl font-semibold">{s.name}</h1>
           <p className="text-xs text-zinc-500">{s.series} · {s.release_date}</p>
         </div>
-        <SyncButton action={syncSetAction.bind(null, setId)} label="Atualizar cartas e preços" auto={needsSync} />
+        <SyncButton
+          action={syncSetAction.bind(null, setId)}
+          autoAction={needsSync ? undefined : fillSetPricesAction.bind(null, setId)}
+          label="Atualizar cartas e preços"
+          auto={needsSync || missingPrices > 0}
+        />
       </div>
       {cards.length === 0 ? (
         <p className="py-10 text-center text-zinc-500">A carregar cartas da Pokémon TCG API…</p>
       ) : (
-        <SetCardsView cards={cards} quantities={quantities} />
+        <SetCardsView cards={cards} quantities={quantities} missingPrices={missingPrices} />
       )}
     </>
   );

@@ -2,6 +2,7 @@ import "server-only";
 import type { CardRow } from "./types";
 import { speciesOf } from "./species";
 import { positiveOrNull } from "./mappers";
+import { alnum, normalizeNumber, pickTcgdexSet, sameSet, type SetBrief } from "./tcgdex-rules";
 
 /**
  * TCGdex (https://tcgdex.dev) — API gratuita, usada só como alternativa quando a
@@ -41,17 +42,40 @@ async function get<T>(path: string): Promise<T> {
   return (await res.json()) as T;
 }
 
-const alnum = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
-const normalizeNumber = (n: string) => n.trim().replace(/^0+/, "").toLowerCase();
-
-export function sameSet(a: string, b: string): boolean {
-  const x = alnum(a);
-  const y = alnum(b);
-  return x !== "" && y !== "" && (x === y || x.includes(y) || y.includes(x));
-}
 
 const hasPrice = (cm: Cardmarket) =>
   [cm.trend, cm.avg, cm.low, cm["trend-holo"], cm["avg-holo"], cm["low-holo"]].some((v) => (v ?? 0) > 0);
+
+function extractPrices(cm: Cardmarket, fallbackUpdated: string | null): NonNullable<PriceFill["prices"]> {
+  return {
+    trend: positiveOrNull(cm.trend ?? cm["trend-holo"]),
+    avg_sell: positiveOrNull(cm.avg ?? cm["avg-holo"]),
+    low: positiveOrNull(cm.low ?? cm["low-holo"]),
+    avg1: positiveOrNull(cm.avg1),
+    avg7: positiveOrNull(cm.avg7),
+    avg30: positiveOrNull(cm.avg30),
+    reverse_trend: positiveOrNull(cm["trend-holo"]),
+    cm_updated_at: cm.updated ?? fallbackUpdated,
+  };
+}
+
+// ---- Preços de um set inteiro ------------------------------------------------
+
+export async function findSetId(name: string, printedTotal: number): Promise<string | null> {
+  return pickTcgdexSet(await get<SetBrief[]>("/sets"), name, printedTotal);
+}
+
+/** número da carta (normalizado) -> id da carta na TCGdex */
+export async function listSetCards(tcgdexSetId: string): Promise<Map<string, string>> {
+  const set = await get<{ cards?: Brief[] }>(`/sets/${encodeURIComponent(tcgdexSetId)}`);
+  return new Map((set.cards ?? []).map((b) => [normalizeNumber(b.localId ?? ""), b.id]));
+}
+
+export async function fetchCardPrices(tcgdexCardId: string, fallbackUpdated: string | null): Promise<PriceFill["prices"]> {
+  const full = await get<Full>(`/cards/${encodeURIComponent(tcgdexCardId)}`);
+  const cm = full.pricing?.cardmarket;
+  return cm && hasPrice(cm) ? extractPrices(cm, fallbackUpdated) : null;
+}
 
 /** Procura a carta na TCGdex por nome + número + set. Devolve preços ou o motivo de falhar. */
 export async function lookupPrices(card: CardRow, printedTotal: number): Promise<PriceFill> {
@@ -82,21 +106,7 @@ export async function lookupPrices(card: CardRow, printedTotal: number): Promise
         (sameName && printedTotal > 0 && full.set?.cardCount?.official === printedTotal);
       if (!setOk) continue;
       const cm = full.pricing?.cardmarket;
-      if (cm && hasPrice(cm)) {
-        return {
-          prices: {
-            trend: positiveOrNull(cm.trend ?? cm["trend-holo"]),
-            avg_sell: positiveOrNull(cm.avg ?? cm["avg-holo"]),
-            low: positiveOrNull(cm.low ?? cm["low-holo"]),
-            avg1: positiveOrNull(cm.avg1),
-            avg7: positiveOrNull(cm.avg7),
-            avg30: positiveOrNull(cm.avg30),
-            reverse_trend: positiveOrNull(cm["trend-holo"]),
-            cm_updated_at: cm.updated ?? card.cm_updated_at,
-          },
-          note: null,
-        };
-      }
+      if (cm && hasPrice(cm)) return { prices: extractPrices(cm, card.cm_updated_at), note: null };
       withoutPrices = true;
     }
     return {
