@@ -161,8 +161,31 @@ export async function fillSetPrices(setId: string, budgetMs: number): Promise<Se
     .is("avg_sell", null)
     .is("reverse_trend", null);
   if (error) throw error;
-  const missing = (missingData ?? []) as CardRow[];
-  if (!missing.length) return { filled: 0, remaining: 0, note: null };
+  const initial = (missingData ?? []) as CardRow[];
+  if (!initial.length) return { filled: 0, remaining: 0, note: null };
+
+  const start = Date.now();
+  // 1) Pokémon TCG API por ids (a mesma fonte do botão «Atualizar preço» da carta)
+  for (let i = 0; i < initial.length; i += 20) {
+    if (Date.now() - start > budgetMs * 0.4) break;
+    try {
+      await saveCards(await fetchCardsByIds(initial.slice(i, i + 20).map((c) => c.id)));
+    } catch {
+      break; // API instável: segue para a TCGdex
+    }
+  }
+  const { data: stillData } = await db
+    .from("cards")
+    .select("*")
+    .eq("set_id", setId)
+    .is("avg30", null)
+    .is("avg7", null)
+    .is("trend", null)
+    .is("avg_sell", null)
+    .is("reverse_trend", null);
+  const missing = (stillData ?? []) as CardRow[];
+  const apiFilled = initial.length - missing.length;
+  if (!missing.length) return { filled: apiFilled, remaining: 0, note: null };
 
   const { data: set } = await db.from("sets").select("name, printed_total").eq("id", setId).maybeSingle();
   const info = set as { name: string; printed_total: number } | null;
@@ -179,7 +202,6 @@ export async function fillSetPrices(setId: string, budgetMs: number): Promise<Se
     return { filled: 0, remaining: missing.length, note: `TCGdex indisponível (${errorMessage(e)})` };
   }
 
-  const start = Date.now();
   const now = new Date().toISOString();
   const updated: CardRow[] = [];
   for (let i = 0; i < missing.length; i += 8) {
@@ -202,9 +224,17 @@ export async function fillSetPrices(setId: string, budgetMs: number): Promise<Se
     if (upErr) throw upErr;
     await recordPrices(updated);
   }
-  const remaining = missing.length - updated.length;
+  // 3) O que sobrar: pesquisa carta a carta (como o botão da carta), dentro do orçamento
+  const doneIds = new Set(updated.map((c) => c.id));
+  let extra = 0;
+  for (const card of missing.filter((c) => !doneIds.has(c.id))) {
+    if (Date.now() - start > budgetMs) break;
+    const r = await fillMissingPrice(card).catch(() => null);
+    if (r && cardPrice(r.card) != null) extra++;
+  }
+  const remaining = missing.length - updated.length - extra;
   return {
-    filled: updated.length,
+    filled: apiFilled + updated.length + extra,
     remaining,
     note: remaining > 0 ? "Algumas cartas ainda não têm preço Cardmarket em nenhuma das APIs." : null,
   };
@@ -238,7 +268,7 @@ export async function refreshCard(id: string): Promise<PriceLookup | null> {
       ? "Pokémon TCG API: sem dados do Cardmarket"
       : "Pokémon TCG API: preços Cardmarket vazios";
   const second = await fillMissingPrice(stored);
-  const note = [mainNote, second.note].filter(Boolean).join(" · ") || null;
+  const note = cardPrice(second.card) != null ? null : [mainNote, second.note].filter(Boolean).join(" · ") || null;
   return { card: second.card, note };
 }
 
