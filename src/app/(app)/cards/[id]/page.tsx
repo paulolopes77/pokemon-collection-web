@@ -71,10 +71,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           {info.length > 0 && <p className="mt-1 text-xs">{info.join(" · ")}</p>}
         </div>
 
-        <CollectionBox cardId={card.id} quantity={quantity} wishlist={wishlist} />
-        {quantity > 0 && price != null && (
-          <p className="text-sm text-zinc-500">Valor das tuas cópias: {eur(price * quantity)}</p>
-        )}
+        <CollectionBox cardId={card.id} quantity={quantity} wishlist={wishlist} price={price} />
 
         {hasCardText(card.card_text) ? (
           <CardTextPanel text={card.card_text!} />

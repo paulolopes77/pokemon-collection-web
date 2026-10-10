@@ -1,10 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { speciesFromName, speciesOf } from "../src/lib/species";
-import { buildRows, filterAndSort } from "../src/lib/grouping";
+import { buildRows, filterAndSort, isDuplicate, type GroupMode, type Header, type SortMode } from "../src/lib/grouping";
 import { readFileSync } from "node:fs";
 import { buildNameQuery, EMPTY_CARD_TEXT, numberSortKey, staticToCardRow, toCardRow, toCardText, toSetRow } from "../src/lib/mappers";
 import { defaultDir, hpValue, sortCards } from "../src/lib/card-sort";
+import { eur, int } from "../src/lib/money";
 import { activeFilterCount, applyCardFilters, filterOptions, NO_FILTERS, NONE } from "../src/lib/card-filters";
 import { energyInfo, hasCardText } from "../src/lib/energy";
 import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
@@ -424,4 +425,79 @@ test("sort by HP and value, ascending/descending, missing data always last", () 
   assert.equal(hpValue({ hp: null }), null);
   assert.equal(hpValue({ hp: "abc" }), null);
   assert.equal(rows.length, sortCards(rows, "hp", "asc").length); // não perde cartas
+});
+
+test("money and integers use a space as thousands separator", () => {
+  const nb = "\u00a0";
+  assert.equal(eur(216.41), `216,41${nb}€`);
+  assert.equal(eur(0), `0,00${nb}€`);
+  assert.equal(eur(999.5), `999,50${nb}€`);
+  assert.equal(eur(1000), `1${nb}000,00${nb}€`); // milhares logo a partir de 1000
+  assert.equal(eur(1234.5), `1${nb}234,50${nb}€`);
+  assert.equal(eur(1234567.891), `1${nb}234${nb}567,89${nb}€`);
+  assert.equal(eur(null), "—");
+  assert.equal(int(12), "12");
+  assert.equal(int(1234), `1${nb}234`);
+  assert.equal(int(1234567), `1${nb}234${nb}567`);
+  assert.equal(int(undefined), "—");
+});
+
+test("collection: group by rarity / element / stage / artist and sort by HP (real set data)", () => {
+  const rows = (fixture("me4-filters.json") as never[]).map((c) =>
+    staticToCardRow(c, { id: "me4", name: "Chaos Rising" }, new Date("2026-10-12")),
+  );
+  const items: OwnedCard[] = rows.map((card, i) => ({ card, quantity: 1, wishlist: false, addedAt: `2026-01-${String(1 + (i % 28)).padStart(2, "0")}` }));
+  const headers = (mode: GroupMode, sort: SortMode = "name") =>
+    buildRows(filterAndSort(items, "", sort), mode, sort, new Set(), false).filter((r) => r.kind === "header") as Header[];
+  const sum = (hs: Header[]) => hs.reduce((n, h) => n + h.cards, 0);
+
+  // Raridade: do mais comum para o mais raro; contagens iguais às calculadas à parte
+  const rar = headers("rarity");
+  assert.deepEqual(rar.map((h) => [h.label, h.cards]), [
+    ["Common", 38], ["Uncommon", 26], ["Rare", 12], ["Double Rare", 10], ["Illustration Rare", 11],
+    ["Ultra Rare", 18], ["Special Illustration Rare", 6], ["Mega Hyper Rare", 1],
+  ]);
+  assert.equal(sum(rar), 122); // nenhuma carta se perde nem se repete
+
+  // Elemento: tipos em português por ordem alfabética, depois Energia e Treinador
+  const el = headers("element");
+  assert.deepEqual(el.slice(-2).map((h) => [h.label, h.cards]), [["Energia", 3], ["Treinador", 22]]);
+  assert.equal(el.find((h) => h.label === "Água")!.cards, 16);
+  assert.equal(sum(el), 122);
+  assert.ok(el.findIndex((h) => h.label === "Água") < el.findIndex((h) => h.label === "Energia"));
+
+  // Estágio: um só estágio por carta (Basic < Stage 1 < Stage 2 …)
+  const st = headers("stage");
+  assert.deepEqual(st.slice(0, 3).map((h) => h.label), ["Basic", "Stage 1", "Stage 2"]);
+  assert.equal(sum(st), 122);
+  assert.equal(st.find((h) => h.label === "Supporter")!.cards, 10);
+
+  // Ilustrador
+  const art = headers("artist");
+  assert.equal(art.find((h) => h.label === "5ban Graphics")!.cards, 11);
+  assert.equal(art.at(-1)!.label, "(sem dados)"); // sem ilustrador no fim
+  assert.equal(art.at(-1)!.cards, 3);
+  assert.equal(sum(art), 122);
+
+  // Ordenar por HP: do maior para o menor, sem HP no fim; os grupos seguem o HP mais alto
+  const byHp = filterAndSort(items, "", "hp");
+  assert.deepEqual(byHp.slice(0, 3).map((i) => hpValue(i.card)), [350, 350, 350]);
+  assert.equal(hpValue(byHp[96].card), 40);
+  assert.equal(byHp.slice(97).every((i) => hpValue(i.card) == null), true);
+  const groupsByHp = headers("rarity", "hp");
+  assert.equal(groupsByHp.length, 8);
+});
+
+test("duplicates: only cards with quantity above 1", () => {
+  const rows = (fixture("me4-filters.json") as never[]).map((c) =>
+    staticToCardRow(c, { id: "me4", name: "Chaos Rising" }, new Date("2026-10-12")),
+  );
+  const qtyOf = (i: number) => 1 + (i % 3); // 1, 2, 3, 1, 2, 3, …
+  const items: OwnedCard[] = rows.map((card, i) => ({ card, quantity: qtyOf(i), wishlist: false, addedAt: "2026-01-01" }));
+  const dups = items.filter(isDuplicate);
+  assert.equal(dups.length, 81); // 122 cartas - 41 com uma só cópia
+  assert.equal(dups.every((i) => i.quantity > 1), true);
+  assert.equal(isDuplicate({ ...items[0], quantity: 1 }), false);
+  assert.equal(isDuplicate({ ...items[0], quantity: 2 }), true);
+  assert.equal(isDuplicate({ ...items[0], quantity: 0 }), false);
 });

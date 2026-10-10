@@ -37,12 +37,12 @@ export const elementLabel = (v: string): string => CATEGORY_LABELS[v] ?? energyI
 export const splitList = (s: string): string[] => s.split(",").map((x) => x.trim()).filter(Boolean);
 
 // Da mais comum para a mais rara; o que não estiver aqui vai para o fim, por ordem alfabética.
-const RARITY_ORDER = [
+export const RARITY_ORDER = [
   "Common", "Uncommon", "Rare", "Rare Holo", "Double Rare", "Illustration Rare", "Ultra Rare", "ACE SPEC Rare",
   "Shiny Rare", "Shiny Ultra Rare", "Special Illustration Rare", "Mega Hyper Rare", "Hyper Rare", "Promo",
 ];
 
-const STAGE_ORDER = ["Basic", "Stage 1", "Stage 2", "MEGA", "VMAX", "VSTAR", "V", "ex", "EX", "GX"];
+export const STAGE_ORDER = ["Basic", "Stage 1", "Stage 2", "MEGA", "VMAX", "VSTAR", "V", "ex", "EX", "GX"];
 
 function tally(values: string[][]): Map<string, number> {
   const m = new Map<string, number>();
@@ -50,7 +50,7 @@ function tally(values: string[][]): Map<string, number> {
   return m;
 }
 
-const byOrder = (order: string[]) => (a: string, b: string) => {
+export const byOrder = (order: string[]) => (a: string, b: string) => {
   const ia = order.indexOf(a);
   const ib = order.indexOf(b);
   if (ia !== -1 || ib !== -1) return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib) || a.localeCompare(b);
@@ -104,17 +104,33 @@ export function filterOptions(cards: CardRow[], filters: CardFilters = NO_FILTER
 
 export const activeFilterCount = (f: CardFilters): number => Object.values(f).filter(Boolean).length;
 
+/** Valor único da carta para agrupar: o estágio principal (Basic, Stage 1, Stage 2, depois o resto). */
+export function primaryStage(c: Pick<CardRow, "subtypes">): string {
+  const st = splitList(c.subtypes);
+  if (!st.length) return NONE;
+  const rank = (v: string) => { const i = STAGE_ORDER.indexOf(v); return i === -1 ? 999 : i; };
+  return [...st].sort((a, b) => rank(a) - rank(b))[0];
+}
+
+/** Valor único da carta para agrupar: o primeiro elemento (ou Energy/Trainer). */
+export const primaryElement = (c: Pick<CardRow, "types" | "supertype">): string => elementKeys(c)[0];
+
+export const rarityOf = (c: Pick<CardRow, "rarity">): string => c.rarity?.trim() || NONE;
+export const artistOf = (c: Pick<CardRow, "artist">): string => c.artist?.trim() || NONE;
+
 /** Filtros combinados (E): a carta tem de cumprir todos os que estiverem escolhidos. */
 export function applyCardFilters(cards: CardRow[], f: CardFilters): CardRow[] {
-  return cards.filter((c) => {
-    if (f.pokemon && speciesOf(c) !== f.pokemon) return false;
-    if (f.stage) {
-      const st = splitList(c.subtypes);
-      if (f.stage === NONE ? st.length > 0 : !st.includes(f.stage)) return false;
-    }
-    if (f.element && !elementKeys(c).includes(f.element)) return false;
-    if (f.rarity && (c.rarity?.trim() || NONE) !== f.rarity) return false;
-    if (f.artist && (c.artist?.trim() || NONE) !== f.artist) return false;
-    return true;
-  });
+  return cards.filter((c) => matchesFilters(c, f));
+}
+
+export function matchesFilters(c: CardRow, f: CardFilters): boolean {
+  if (f.pokemon && speciesOf(c) !== f.pokemon) return false;
+  if (f.stage) {
+    const st = splitList(c.subtypes);
+    if (f.stage === NONE ? st.length > 0 : !st.includes(f.stage)) return false;
+  }
+  if (f.element && !elementKeys(c).includes(f.element)) return false;
+  if (f.rarity && rarityOf(c) !== f.rarity) return false;
+  if (f.artist && artistOf(c) !== f.artist) return false;
+  return true;
 }

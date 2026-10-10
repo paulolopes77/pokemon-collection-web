@@ -3,9 +3,21 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { adjustQuantity, toggleWishlist } from "@/app/actions";
+import { eur } from "@/lib/money";
 
-/** Cartão «Na coleção»: quantidade (− n +) e, logo a seguir, a wishlist, separada por uma barra subtil. */
-export function CollectionBox({ cardId, quantity, wishlist }: { cardId: string; quantity: number; wishlist: boolean }) {
+/** Cartão «Na coleção»: quantidade (− n +), a wishlist logo a seguir (barra subtil) e, por baixo, o valor das cópias. */
+export function CollectionBox({
+  cardId,
+  quantity,
+  wishlist,
+  price,
+}: {
+  cardId: string;
+  quantity: number;
+  wishlist: boolean;
+  /** Valor de uma cópia (média de 30 dias…); com ele mostra-se o valor das cópias que tens. */
+  price: number | null;
+}) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +63,9 @@ export function CollectionBox({ cardId, quantity, wishlist }: { cardId: string; 
           </button>
         </span>
       </div>
+      {quantity > 0 && price != null && (
+        <p className="text-xs text-zinc-500">Valor das tuas cópias: {eur(price * quantity)}</p>
+      )}
       {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );

@@ -3,14 +3,8 @@
 import { useMemo, useState } from "react";
 import { CardTile } from "./CardTile";
 import { CARD_SORT_LABELS, defaultDir, sortCards, type CardSortKey, type SortDir } from "@/lib/card-sort";
-import {
-  activeFilterCount,
-  applyCardFilters,
-  filterOptions,
-  NO_FILTERS,
-  type CardFilters,
-  type Option,
-} from "@/lib/card-filters";
+import { FilterPanel } from "./FilterPanel";
+import { activeFilterCount, applyCardFilters, filterOptions, NO_FILTERS, type CardFilters } from "@/lib/card-filters";
 import type { CardRow } from "@/lib/types";
 
 /** Seta para cima (ascendente) ou para baixo (descendente). */
@@ -19,32 +13,6 @@ function DirIcon({ dir }: { dir: SortDir }) {
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       {dir === "asc" ? <path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" /> : <path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" />}
     </svg>
-  );
-}
-
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: Option[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <label className="block text-xs text-zinc-500">
-      {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)} className="input mt-0.5 text-sm text-zinc-900 dark:text-zinc-100">
-        <option value="">Todos</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label} ({o.count})
-          </option>
-        ))}
-      </select>
-    </label>
   );
 }
 
@@ -129,18 +97,7 @@ export function SetCardsView({
       </div>
 
       {(open || active > 0) && (
-        <div className="card-box space-y-2">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            <FilterSelect label="Pokémon" value={filters.pokemon} options={options.pokemon} onChange={set("pokemon")} />
-            <FilterSelect label="Estágio" value={filters.stage} options={options.stage} onChange={set("stage")} />
-            <FilterSelect label="Elemento" value={filters.element} options={options.element} onChange={set("element")} />
-            <FilterSelect label="Raridade" value={filters.rarity} options={options.rarity} onChange={set("rarity")} />
-            <FilterSelect label="Ilustrador" value={filters.artist} options={options.artist} onChange={set("artist")} />
-          </div>
-          <p className="text-xs text-zinc-500">
-            A mostrar {visible.length} de {cards.length} cartas · as listas só mostram o que existe com os outros filtros escolhidos
-          </p>
-        </div>
+        <FilterPanel options={options} filters={filters} onChange={(k, v) => set(k)(v)} shown={visible.length} total={cards.length} />
       )}
 
       {visible.length === 0 ? (

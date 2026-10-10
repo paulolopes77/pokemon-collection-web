@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.14.0 — 2026-10-12
+- Coleção e Wishlist: agrupar também por raridade, elemento, estágio e ilustrador; ordenar também por HP; os cinco
+  filtros do set (Pokémon, Estágio, Elemento, Raridade, Ilustrador, condicionados entre si) com «Limpar filtros».
+- Coleção: filtro «Repetidas (n)» — só as cartas de que tens mais do que uma cópia (quantidade > 1).
+- Cabeçalhos dos grupos mais claros.
+- Montantes e números com espaço como separador de milhares («170 152,05 €», «1 234 cartas»).
+- Página da carta: o «Valor das tuas cópias» passou para dentro do cartão «Na coleção».
+
 ## 0.13.0 — 2026-10-12
 - Filtro «Elemento»: as cartas sem tipo passam a ser classificadas como «Treinador» ou «Energia» (em vez de «sem dados»).
 - Os filtros do set condicionam-se uns aos outros: cada lista só mostra o que existe nas cartas que cumprem os
