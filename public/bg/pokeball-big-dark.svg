@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="600" height="600" viewBox="-60 -60 120 120">
+  <defs>
+  <filter id="soft" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".7"/></filter>
+  <g id="b">
+    <path d="M-46 0A46 46 0 0 1 46 0Z" fill="#d4d4d8" fill-opacity=".30"/>
+    <g fill="none" stroke="#d4d4d8" stroke-width="4" stroke-linecap="round">
+      <circle r="46"/>
+      <path d="M-46 0H-15M15 0H46"/>
+      <circle r="15"/>
+    </g>
+    <circle r="6" fill="#d4d4d8"/>
+  </g>
+  </defs>
+  <g opacity="0.09" filter="url(#soft)" transform="rotate(-12)">
+    <use xlink:href="#b"/>
+  </g>
+</svg>

@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.5.2 — 2026-10-12
+- Fundo com padrão de pokébolas em tons de cinzento e uma pokébola grande esbatida (claro e escuro);
+  cartões e campos ligeiramente translúcidos para manter a leitura.
+
 ## 0.5.1 — 2026-10-12
 - Erros HTTP da API mostram uma mensagem curta (nunca HTML) e, se a Pokémon TCG API falhar (502/503/504),
   o set continua a preencher preços com a TCGdex a partir da cache.
