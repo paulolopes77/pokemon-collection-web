@@ -17,6 +17,22 @@ export type Option = { value: string; label: string; count: number };
 /** Valor usado para cartas sem esse dado (ex.: Energias sem raridade). */
 export const NONE = "__none__";
 
+/**
+ * Valores do filtro «Elemento» de uma carta: os seus tipos de energia (Fire, Water…). As cartas sem tipo são
+ * classificadas pela categoria (Energy, Trainer); só se nem isso houver ficam em «(sem dados)».
+ */
+export function elementKeys(c: Pick<CardRow, "types" | "supertype">): string[] {
+  const types = splitList(c.types);
+  if (types.length) return types;
+  const st = c.supertype.trim().toLowerCase();
+  if (st === "energy") return ["Energy"];
+  if (st === "trainer") return ["Trainer"];
+  return [NONE];
+}
+
+const CATEGORY_LABELS: Record<string, string> = { Energy: "Energia", Trainer: "Treinador" };
+export const elementLabel = (v: string): string => CATEGORY_LABELS[v] ?? energyInfo(v).label;
+
 /** "Stage 2, MEGA, ex" -> ["Stage 2", "MEGA", "ex"] */
 export const splitList = (s: string): string[] => s.split(",").map((x) => x.trim()).filter(Boolean);
 
@@ -46,19 +62,43 @@ function toOptions(m: Map<string, number>, sort: (a: string, b: string) => numbe
     .concat(m.has(NONE) ? [{ value: NONE, label: "(sem dados)", count: m.get(NONE)! }] : []);
 }
 
-/** Opções de cada filtro, calculadas só a partir das cartas do set (com a contagem de cartas de cada uma). */
-export function filterOptions(cards: CardRow[]) {
-  const pokemon = tally(cards.map((c) => [speciesOf(c)]));
-  const stage = tally(cards.map((c) => (splitList(c.subtypes).length ? splitList(c.subtypes) : [NONE])));
-  const element = tally(cards.map((c) => (splitList(c.types).length ? splitList(c.types) : [NONE])));
-  const rarity = tally(cards.map((c) => [c.rarity?.trim() || NONE]));
-  const artist = tally(cards.map((c) => [c.artist?.trim() || NONE]));
+const elementSort = (a: string, b: string) => {
+  const rank = (v: string) => (v in CATEGORY_LABELS ? 1 : 0);
+  return rank(a) - rank(b) || elementLabel(a).localeCompare(elementLabel(b), "pt");
+};
+
+type Facet = keyof CardFilters;
+
+/** Valores que cada carta tem em cada filtro. */
+function facetValues(c: CardRow): Record<Facet, string[]> {
+  const st = splitList(c.subtypes);
   return {
-    pokemon: toOptions(pokemon, (a, b) => a.localeCompare(b, "pt")),
-    stage: toOptions(stage, byOrder(STAGE_ORDER)),
-    element: toOptions(element, (a, b) => energyInfo(a).label.localeCompare(energyInfo(b).label, "pt"), (v) => energyInfo(v).label),
-    rarity: toOptions(rarity, byOrder(RARITY_ORDER)),
-    artist: toOptions(artist, (a, b) => a.localeCompare(b, "en")),
+    pokemon: [speciesOf(c)],
+    stage: st.length ? st : [NONE],
+    element: elementKeys(c),
+    rarity: [c.rarity?.trim() || NONE],
+    artist: [c.artist?.trim() || NONE],
+  };
+}
+
+/**
+ * Opções de cada filtro, calculadas só a partir das cartas do set e **condicionadas pelos outros filtros**:
+ * cada lista mostra apenas o que ainda existe nas cartas que cumprem os restantes filtros, com a contagem
+ * correspondente. O valor já escolhido nunca desaparece da sua lista (fica com 0 se deixar de haver cartas).
+ */
+export function filterOptions(cards: CardRow[], filters: CardFilters = NO_FILTERS) {
+  const build = (facet: Facet, sort: (a: string, b: string) => number, label?: (v: string) => string): Option[] => {
+    const pool = applyCardFilters(cards, { ...filters, [facet]: "" });
+    const m = tally(pool.map((c) => facetValues(c)[facet]));
+    if (filters[facet] && !m.has(filters[facet])) m.set(filters[facet], 0);
+    return toOptions(m, sort, label);
+  };
+  return {
+    pokemon: build("pokemon", (a, b) => a.localeCompare(b, "pt")),
+    stage: build("stage", byOrder(STAGE_ORDER)),
+    element: build("element", elementSort, elementLabel),
+    rarity: build("rarity", byOrder(RARITY_ORDER)),
+    artist: build("artist", (a, b) => a.localeCompare(b, "en")),
   };
 }
 
@@ -72,10 +112,7 @@ export function applyCardFilters(cards: CardRow[], f: CardFilters): CardRow[] {
       const st = splitList(c.subtypes);
       if (f.stage === NONE ? st.length > 0 : !st.includes(f.stage)) return false;
     }
-    if (f.element) {
-      const ty = splitList(c.types);
-      if (f.element === NONE ? ty.length > 0 : !ty.includes(f.element)) return false;
-    }
+    if (f.element && !elementKeys(c).includes(f.element)) return false;
     if (f.rarity && (c.rarity?.trim() || NONE) !== f.rarity) return false;
     if (f.artist && (c.artist?.trim() || NONE) !== f.artist) return false;
     return true;

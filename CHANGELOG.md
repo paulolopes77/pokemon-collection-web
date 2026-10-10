@@ -1,5 +1,13 @@
 # Histórico de versões
 
+## 0.13.0 — 2026-10-12
+- Filtro «Elemento»: as cartas sem tipo passam a ser classificadas como «Treinador» ou «Energia» (em vez de «sem dados»).
+- Os filtros do set condicionam-se uns aos outros: cada lista só mostra o que existe nas cartas que cumprem os
+  restantes filtros (com a contagem certa). O valor escolhido nunca desaparece da sua lista.
+- «Limpar filtros» visível na barra sempre que há filtros ativos.
+- Ordenar as cartas do set por Número, Nome, **HP** ou **Valor**, com botão de sentido (seta ↑ ascendente / ↓ descendente).
+  HP e Valor começam do maior para o menor; cartas sem HP ou sem preço ficam sempre no fim.
+
 ## 0.12.0 — 2026-10-12
 - Página do set: filtros por Pokémon, Estágio, Elemento, Raridade e Ilustrador, com as opções (e a contagem de
   cartas de cada uma) calculadas a partir do set aberto. Combinam-se entre si e com «Só em falta»; botão «Limpar filtros».

@@ -4,6 +4,7 @@ import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { readFileSync } from "node:fs";
 import { buildNameQuery, EMPTY_CARD_TEXT, numberSortKey, staticToCardRow, toCardRow, toCardText, toSetRow } from "../src/lib/mappers";
+import { defaultDir, hpValue, sortCards } from "../src/lib/card-sort";
 import { activeFilterCount, applyCardFilters, filterOptions, NO_FILTERS, NONE } from "../src/lib/card-filters";
 import { energyInfo, hasCardText } from "../src/lib/energy";
 import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
@@ -335,9 +336,14 @@ test("set filters on a real set (Chaos Rising, 122 cards): options, counts and c
   assert.deepEqual(o.stage.slice(0, 3).map((x) => x.value), ["Basic", "Stage 1", "Stage 2"]);
 
   assert.equal(count(o.element, "Water"), 16);
-  assert.equal(count(o.element, NONE), 25); // Treinadores e Energias
+  // as cartas sem tipo são classificadas pela categoria: 22 Treinadores + 3 Energias (nenhuma fica «sem dados»)
+  assert.equal(count(o.element, "Trainer"), 22);
+  assert.equal(count(o.element, "Energy"), 3);
+  assert.equal(count(o.element, NONE), undefined);
   assert.equal(o.element.find((x) => x.value === "Water")!.label, "Água");
-  assert.equal(o.element.at(-1)!.value, NONE); // «sem dados» no fim
+  assert.equal(o.element.find((x) => x.value === "Trainer")!.label, "Treinador");
+  assert.equal(o.element.find((x) => x.value === "Energy")!.label, "Energia");
+  assert.deepEqual(o.element.slice(-2).map((x) => x.value), ["Energy", "Trainer"]); // categorias depois dos tipos
 
   assert.equal(o.artist.filter((x) => x.value !== NONE).length, 83);
   assert.equal(count(o.artist, "5ban Graphics"), 11);
@@ -349,11 +355,73 @@ test("set filters on a real set (Chaos Rising, 122 cards): options, counts and c
   assert.equal(f({ rarity: "Special Illustration Rare" }).length, 6);
   assert.equal(f({ element: "Water" }).length, 16);
   assert.equal(f({ element: "Water", stage: "Stage 2" }).length, 4); // filtros combinam-se (E)
-  assert.equal(f({ element: NONE }).length, 25);
+  assert.equal(f({ element: "Trainer" }).length, 22);
+  assert.equal(f({ element: "Energy" }).length, 3);
+  assert.equal(f({ element: NONE }).length, 0);
   assert.equal(f({ pokemon: "Greninja" }).length, 4);
   assert.equal(f({ pokemon: "Greninja", rarity: "Mega Hyper Rare" }).length, 1);
   assert.equal(f({ artist: "5ban Graphics" }).length, 11);
   assert.equal(f({ artist: NONE }).length, 3);
   assert.equal(f({ pokemon: "Greninja", rarity: "Common" }).length, 0);
   assert.equal(activeFilterCount({ ...NO_FILTERS, rarity: "x", artist: "y" }), 2);
+
+  // Filtros condicionados entre si (valores calculados à parte a partir dos mesmos dados)
+  const values = (list: { value: string }[]) => list.map((x) => x.value).sort();
+  const sir = filterOptions(rows, { ...NO_FILTERS, rarity: "Special Illustration Rare" });
+  assert.deepEqual(values(sir.element), ["Colorless", "Dragon", "Psychic", "Trainer", "Water"]);
+  assert.equal(count(sir.element, "Trainer"), 2);
+  assert.equal(count(sir.element, "Water"), 1);
+  assert.deepEqual(values(sir.artist), ["Kazumasa Yasukunio", "Keisin", "OKACHEKE", "Susumu Maeya", "Teeziro", "Tomowaka"]);
+  assert.equal(count(sir.stage, "Supporter"), 2);
+  assert.equal(count(sir.stage, "Basic"), 1);
+  // a lista do próprio filtro NÃO é condicionada por ele mesmo (pode trocar de raridade)
+  assert.equal(count(sir.rarity, "Common"), 38);
+
+  const gren = filterOptions(rows, { ...NO_FILTERS, pokemon: "Greninja" });
+  assert.deepEqual(values(gren.rarity), ["Double Rare", "Mega Hyper Rare", "Special Illustration Rare", "Ultra Rare"]);
+  assert.deepEqual(values(gren.artist), ["Susumu Maeya", "takuyoa"]);
+  assert.deepEqual(values(gren.element), ["Water"]);
+
+  const water = filterOptions(rows, { ...NO_FILTERS, element: "Water" });
+  assert.equal(count(water.rarity, "Common"), 6);
+  assert.equal(count(water.rarity, "Mega Hyper Rare"), 1);
+  assert.equal(count(water.rarity, "Ultra Rare"), 1);
+
+  // o valor escolhido nunca desaparece da sua lista, mesmo que a combinação dê 0 cartas
+  const impossible = filterOptions(rows, { ...NO_FILTERS, pokemon: "Greninja", rarity: "Common" });
+  assert.equal(count(impossible.rarity, "Common"), 0);
+  assert.equal(count(impossible.pokemon, "Greninja"), 0);
+});
+
+test("sort by HP and value, ascending/descending, missing data always last", () => {
+  const rows: CardRow[] = (fixture("me4-filters.json") as never[]).map((c) =>
+    staticToCardRow(c, { id: "me4", name: "Chaos Rising" }, new Date("2026-10-12")),
+  );
+  const num = (r: CardRow) => r.number_sort;
+
+  // HP (valores calculados à parte nos mesmos dados): 97 cartas com HP, 25 sem; máximo 350, mínimo 40
+  const desc = sortCards(rows, "hp", "desc");
+  assert.deepEqual(desc.slice(0, 3).map((r) => [hpValue(r), r.number]), [[350, "22"], [350, "48"], [350, "100"]]); // empate: por número
+  assert.equal(hpValue(desc[96]), 40);
+  assert.equal(desc.slice(97).every((r) => hpValue(r) == null), true); // sem HP no fim (Treinadores e Energias)
+  const asc = sortCards(rows, "hp", "asc");
+  assert.deepEqual(asc.slice(0, 3).map((r) => [hpValue(r), r.number]), [[40, "49"], [50, "1"], [60, "36"]]);
+  assert.equal(asc.slice(97).every((r) => hpValue(r) == null), true); // também no fim em ascendente
+
+  // Número e Nome
+  assert.deepEqual(sortCards(rows, "number", "asc").slice(0, 3).map(num), [1, 2, 3]);
+  assert.deepEqual(sortCards(rows, "number", "desc").slice(0, 2).map(num), [122, 121]);
+  assert.equal(sortCards(rows, "name", "asc")[0].name.localeCompare(sortCards(rows, "name", "asc")[1].name, "pt") <= 0, true);
+
+  // Valor (a média de 30 dias; os preços vêm de outra fonte, por isso uso valores de teste)
+  const priced = rows.slice(0, 5).map((r, i) => ({ ...r, avg30: [10, null, 250, 3.5, 99][i] as number | null }));
+  assert.deepEqual(sortCards(priced, "value", "desc").map((r) => r.avg30), [250, 99, 10, 3.5, null]);
+  assert.deepEqual(sortCards(priced, "value", "asc").map((r) => r.avg30), [3.5, 10, 99, 250, null]); // sem preço no fim
+
+  assert.equal(defaultDir("hp"), "desc");
+  assert.equal(defaultDir("value"), "desc");
+  assert.equal(defaultDir("number"), "asc");
+  assert.equal(hpValue({ hp: null }), null);
+  assert.equal(hpValue({ hp: "abc" }), null);
+  assert.equal(rows.length, sortCards(rows, "hp", "asc").length); // não perde cartas
 });
