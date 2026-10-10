@@ -1,5 +1,11 @@
 # Histórico de versões
 
+## 0.10.0 — 2026-10-12
+- Página da carta: carrossel com outras imagens da mesma carta (a mesma carta noutros idiomas, via TCGdex:
+  português, espanhol, francês, alemão, italiano, japonês, quando existirem). Telemóvel: deslizar com o dedo;
+  PC: clicar na carta (ou setas do teclado / botões ‹ ›). Resultados em cache durante 24 h.
+- Sombra também nos botões do Cardmarket e do TCGplayer.
+
 ## 0.9.0 — 2026-10-12
 - Sets: filtros por série e por ano; campo de texto mais curto («Procurar por SET», continua a procurar também na
   série); cada set é um cartão com contorno e sombra, em grelha de 1 a 3 colunas.
