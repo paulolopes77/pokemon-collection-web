@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
+import { isAdminEmail, parseAdminEmails, validateNewUser } from "../src/lib/admin-rules";
 import { setNeedsSync } from "../src/lib/sync-rules";
 import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
 
@@ -93,4 +94,15 @@ test("setNeedsSync", () => {
   assert.equal(setNeedsSync(50, 100, "2026-10-10T11:00:00Z", now), true);
   assert.equal(setNeedsSync(100, 100, "2026-10-10T11:00:00Z", now), false);
   assert.equal(setNeedsSync(100, 100, "2026-10-08T11:00:00Z", now), true);
+});
+
+test("admin rules", () => {
+  assert.deepEqual(parseAdminEmails(" A@x.com, b@y.com ,, "), ["a@x.com", "b@y.com"]);
+  assert.equal(isAdminEmail("A@X.com", "a@x.com"), true);
+  assert.equal(isAdminEmail("c@x.com", "a@x.com"), false);
+  assert.equal(isAdminEmail(null, "a@x.com"), false);
+  assert.equal(isAdminEmail("a@x.com", ""), false);
+  assert.equal(validateNewUser("nope", "12345678"), "Email inválido.");
+  assert.match(validateNewUser("a@x.com", "123") ?? "", /pelo menos 8/);
+  assert.equal(validateNewUser("a@x.com", "12345678"), null);
 });

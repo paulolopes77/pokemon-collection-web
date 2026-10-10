@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/api/cron"];
+const PUBLIC_PATHS = ["/login", "/register", "/auth", "/api/cron"];
 
 /** Renova a sessão e manda para /login quem não tem sessão. */
 export async function updateSession(request: NextRequest) {
@@ -30,7 +30,7 @@ export async function updateSession(request: NextRequest) {
     url.search = "";
     return NextResponse.redirect(url);
   }
-  if (user && path === "/login") {
+  if (user && (path === "/login" || path === "/register")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

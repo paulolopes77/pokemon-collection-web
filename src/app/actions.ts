@@ -1,7 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { signupEnabled, validateNewUser } from "@/lib/admin-rules";
 import { errorMessage } from "@/lib/errors";
 import { createClient } from "@/lib/supabase/server";
 import { refreshCard, syncSetCards, syncSets } from "@/lib/sync";
@@ -96,4 +98,27 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+/** Registo público (só se NEXT_PUBLIC_ALLOW_SIGNUP=true e o Supabase permitir novos utilizadores). */
+export async function signUp(formData: FormData) {
+  if (!signupEnabled()) redirect("/login");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  const problem = validateNewUser(email, password);
+  if (problem) redirect("/register?error=" + encodeURIComponent(problem));
+
+  const h = await headers();
+  const origin = h.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: `${origin}/auth/callback` },
+  });
+  if (error) redirect("/register?error=" + encodeURIComponent(error.message));
+
+  // Sem confirmação de email, o utilizador já tem sessão.
+  if (data.session) redirect("/");
+  redirect("/register?ok=" + encodeURIComponent("Conta criada. Confirma o email que enviámos (vê também o spam) e depois entra."));
 }

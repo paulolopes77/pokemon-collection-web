@@ -34,6 +34,8 @@ Copia `.env.example` para `.env.local` (desenvolvimento) e define as mesmas no V
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | chave anon (pública) |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave service_role — **só no servidor, nunca com `NEXT_PUBLIC_`** |
 | `CRON_SECRET` | texto aleatório longo (ex.: `openssl rand -hex 32`); o Vercel envia-o ao cron |
+| `ADMIN_EMAILS` | o(s) teu(s) email(s) de administrador, separados por vírgula — dá acesso à página **Utilizadores** |
+| `NEXT_PUBLIC_ALLOW_SIGNUP` | opcional: `true` ativa a página pública «Criar conta» (por omissão, desligada) |
 | `POKEMONTCG_API_KEY` | opcional (chave gratuita em <https://dev.pokemontcg.io>) |
 
 Depois de alterar variáveis, faz **Redeploy** (só afetam deploys novos).
@@ -45,6 +47,20 @@ Depois de alterar variáveis, faz **Redeploy** (só afetam deploys novos).
 ### Primeira utilização
 Entra → **Sets** (a lista é descarregada sozinha) → abre um set (as cartas e preços são descarregados e
 ficam em cache) → adiciona cartas com `+`.
+
+## Utilizadores
+
+Por omissão o site é **fechado**: só entra quem tiver conta criada por um administrador.
+
+- **Criar utilizadores (recomendado):** define `ADMIN_EMAILS` com o teu email (o utilizador tem de existir). Depois de
+  entrares aparece o separador **Utilizadores**, onde crias contas (email + password, já confirmadas) e apagas contas
+  (apagar uma conta apaga também a coleção dessa pessoa).
+- **Registo público (opcional):** põe `NEXT_PUBLIC_ALLOW_SIGNUP=true` e faz Redeploy; aparece «Criar conta» no login.
+  No Supabase tem de estar ligado **Authentication → Sign In / Providers → Allow new users to sign up**, e
+  **Authentication → URL Configuration → Redirect URLs** deve incluir `https://O-TEU-SITE/auth/callback`.
+  O Supabase envia um email de confirmação; o servidor de email por omissão tem um limite baixo de envios por hora —
+  para uso real configura um SMTP próprio (Authentication → SMTP Settings).
+- Cada utilizador só vê e altera a **sua** coleção (RLS); sets, cartas e preços são partilhados.
 
 ## Desenvolvimento
 
