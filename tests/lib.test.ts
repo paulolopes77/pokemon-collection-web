@@ -4,6 +4,7 @@ import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { readFileSync } from "node:fs";
 import { buildNameQuery, EMPTY_CARD_TEXT, numberSortKey, staticToCardRow, toCardRow, toCardText, toSetRow } from "../src/lib/mappers";
+import { activeFilterCount, applyCardFilters, filterOptions, NO_FILTERS, NONE } from "../src/lib/card-filters";
 import { energyInfo, hasCardText } from "../src/lib/energy";
 import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
 import { filterSets, seriesOptions, yearOptions } from "../src/lib/sets-filter";
@@ -309,4 +310,50 @@ test("energy chips", () => {
   assert.equal(energyInfo("Colorless").letter, "C");
   assert.equal(energyInfo("Darkness").label, "Escuridão");
   assert.equal(energyInfo("Estranha").letter, "E"); // desconhecido: usa a inicial
+});
+
+test("set filters on a real set (Chaos Rising, 122 cards): options, counts and combinations", () => {
+  const rows: CardRow[] = (fixture("me4-filters.json") as never[]).map((c) =>
+    staticToCardRow(c, { id: "me4", name: "Chaos Rising" }, new Date("2026-10-12")),
+  );
+  assert.equal(rows.length, 122);
+  const o = filterOptions(rows);
+  const count = (list: { value: string; count: number }[], v: string) => list.find((x) => x.value === v)?.count;
+
+  // contagens calculadas à parte (em Python) a partir do mesmo ficheiro de dados
+  assert.equal(count(o.rarity, "Common"), 38);
+  assert.equal(count(o.rarity, "Special Illustration Rare"), 6);
+  assert.equal(count(o.rarity, "Mega Hyper Rare"), 1);
+  assert.equal(count(o.rarity, NONE), undefined); // todas as cartas deste set têm raridade
+  assert.deepEqual(o.rarity.slice(0, 3).map((x) => x.value), ["Common", "Uncommon", "Rare"]); // do mais comum para o mais raro
+  assert.equal(o.rarity.at(-1)!.value, "Mega Hyper Rare");
+
+  assert.equal(count(o.stage, "Basic"), 46);
+  assert.equal(count(o.stage, "Stage 2"), 16);
+  assert.equal(count(o.stage, "MEGA"), 13);
+  assert.equal(count(o.stage, "Supporter"), 10);
+  assert.deepEqual(o.stage.slice(0, 3).map((x) => x.value), ["Basic", "Stage 1", "Stage 2"]);
+
+  assert.equal(count(o.element, "Water"), 16);
+  assert.equal(count(o.element, NONE), 25); // Treinadores e Energias
+  assert.equal(o.element.find((x) => x.value === "Water")!.label, "Água");
+  assert.equal(o.element.at(-1)!.value, NONE); // «sem dados» no fim
+
+  assert.equal(o.artist.filter((x) => x.value !== NONE).length, 83);
+  assert.equal(count(o.artist, "5ban Graphics"), 11);
+  assert.equal(count(o.artist, NONE), 3);
+  assert.equal(count(o.pokemon, "Greninja"), 4); // as 4 versões da Mega Greninja ex, agrupadas na espécie
+
+  const f = (patch: Partial<typeof NO_FILTERS>) => applyCardFilters(rows, { ...NO_FILTERS, ...patch });
+  assert.equal(f({}).length, 122);
+  assert.equal(f({ rarity: "Special Illustration Rare" }).length, 6);
+  assert.equal(f({ element: "Water" }).length, 16);
+  assert.equal(f({ element: "Water", stage: "Stage 2" }).length, 4); // filtros combinam-se (E)
+  assert.equal(f({ element: NONE }).length, 25);
+  assert.equal(f({ pokemon: "Greninja" }).length, 4);
+  assert.equal(f({ pokemon: "Greninja", rarity: "Mega Hyper Rare" }).length, 1);
+  assert.equal(f({ artist: "5ban Graphics" }).length, 11);
+  assert.equal(f({ artist: NONE }).length, 3);
+  assert.equal(f({ pokemon: "Greninja", rarity: "Common" }).length, 0);
+  assert.equal(activeFilterCount({ ...NO_FILTERS, rarity: "x", artist: "y" }), 2);
 });

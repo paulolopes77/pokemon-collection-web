@@ -10,12 +10,14 @@ export function SyncButton({
   label,
   auto = false,
   autoAction,
+  className = "",
 }: {
   action: () => Promise<ActionResult>;
   label: string;
   auto?: boolean;
   /** Ação a correr automaticamente ao abrir a página (por omissão, a mesma do botão). */
   autoAction?: () => Promise<ActionResult>;
+  className?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -39,12 +41,17 @@ export function SyncButton({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto]);
 
+  // O texto do resultado fica à esquerda do botão, na mesma linha (no telemóvel, por cima). O botão não muda de sítio.
   return (
-    <div className="flex items-center gap-2">
-      <button type="button" onClick={() => run()} disabled={pending} className="btn">
+    <div className={`flex flex-col items-end gap-1 text-right sm:flex-row sm:items-center sm:justify-end sm:gap-3 ${className}`}>
+      {message && (
+        <span role="status" className="min-w-0 text-xs text-zinc-500 sm:flex-1">
+          {message}
+        </span>
+      )}
+      <button type="button" onClick={() => run()} disabled={pending} className="btn shrink-0">
         {pending ? "A sincronizar…" : label}
       </button>
-      {message && <span className="text-xs text-zinc-500">{message}</span>}
     </div>
   );
 }

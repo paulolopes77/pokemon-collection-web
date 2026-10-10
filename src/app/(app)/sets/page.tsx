@@ -15,7 +15,7 @@ export default async function SetsPage() {
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Sets</h1>
-        <SyncButton action={syncSetsAction} label="Atualizar lista de sets" auto={sets.length === 0} />
+        <SyncButton action={syncSetsAction} label="Atualizar lista de sets" auto={sets.length === 0} className="min-w-0 flex-1" />
       </div>
       {sets.length === 0 ? (
         <p className="py-10 text-center text-zinc-500">A carregar sets da Pokémon TCG API…</p>

@@ -49,6 +49,7 @@ export default async function SetPage({ params }: { params: Promise<{ id: string
           action={syncSetAction.bind(null, setId)}
           autoAction={needsSync ? undefined : fillSetPricesAction.bind(null, setId)}
           label="Atualizar cartas e preços"
+          className="min-w-0 flex-1"
           auto={needsSync || missingPrices > 0}
         />
       </div>

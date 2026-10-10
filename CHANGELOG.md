@@ -1,5 +1,10 @@
 # Histórico de versões
 
+## 0.12.0 — 2026-10-12
+- Página do set: filtros por Pokémon, Estágio, Elemento, Raridade e Ilustrador, com as opções (e a contagem de
+  cartas de cada uma) calculadas a partir do set aberto. Combinam-se entre si e com «Só em falta»; botão «Limpar filtros».
+- Botão de sincronizar: o texto do resultado fica à esquerda do botão, na mesma linha (no telemóvel, por cima).
+
 ## 0.11.1 — 2026-10-12
 - Página da carta: «Atualizar preço» passou para o cartão «Preços Cardmarket» (canto superior direito, na linha do
   título); «Wishlist» passou para o cartão «Na coleção», logo a seguir ao «+», com uma barra vertical subtil.
