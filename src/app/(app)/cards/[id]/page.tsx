@@ -56,7 +56,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr] xl:grid-cols-[minmax(0,400px)_1fr]">
       <div>
-        <BackLink fallback={card.set_id ? `/sets/${encodeURIComponent(card.set_id)}` : "/"} label={card.set_name || "Voltar"} />
+        <BackLink fallback={card.set_id ? `/sets/${encodeURIComponent(card.set_id)}` : "/"} label="Voltar" />
         <CardImagePanel card={card} />
       </div>
 
