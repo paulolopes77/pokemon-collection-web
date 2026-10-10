@@ -6,6 +6,7 @@ import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
 import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
+import { describeHttpFailure } from "../src/lib/http-errors";
 import { isDark, nextPref, parsePref, THEME_INIT_SCRIPT } from "../src/lib/theme";
 import { setNeedsSync } from "../src/lib/sync-rules";
 import { cardPrice, type CardRow, type OwnedCard } from "../src/lib/types";
@@ -179,4 +180,15 @@ test("theme init script matches isDark for every preference", () => {
       assert.equal(run(stored, sys), isDark(parsePref(stored), sys), `${stored}/${sys}`);
     }
   }
+});
+
+test("describeHttpFailure never leaks HTML", () => {
+  const html = '<!DOCTYPE html> <!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US">';
+  assert.equal(
+    describeHttpFailure("Pokémon TCG API", 502, html),
+    "Pokémon TCG API: servidor indisponível ou sobrecarregado (HTTP 502)",
+  );
+  assert.equal(describeHttpFailure("X", 429, ""), "X: demasiados pedidos (HTTP 429)");
+  assert.equal(describeHttpFailure("X", 404, '{"error":"not found"}'), 'X: HTTP 404 ({"error":"not found"})');
+  assert.equal(describeHttpFailure("X", 500, html), "X: HTTP 500");
 });

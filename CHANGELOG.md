@@ -1,5 +1,9 @@
 # Histórico de versões
 
+## 0.5.1 — 2026-10-12
+- Erros HTTP da API mostram uma mensagem curta (nunca HTML) e, se a Pokémon TCG API falhar (502/503/504),
+  o set continua a preencher preços com a TCGdex a partir da cache.
+
 ## 0.5.0 — 2026-10-12
 - Largura fluida até 1600 px (mais colunas de cartas em ecrãs grandes).
 - Tema claro/escuro: botão Auto / Claro / Escuro (guarda a escolha, sem «flash» ao carregar).

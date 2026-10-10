@@ -1,4 +1,5 @@
 import "server-only";
+import { describeHttpFailure } from "./http-errors";
 import { buildNameQuery, toCardRow, toSetRow, type ApiCard, type ApiSet } from "./mappers";
 import type { CardRow, SetRow } from "./types";
 
@@ -29,8 +30,8 @@ async function request<T>(path: string, params: Record<string, string | number |
     try {
       const res = await fetch(url, { headers, cache: "no-store", signal: AbortSignal.timeout(TIMEOUT_MS) });
       if (res.ok) return (await res.json()) as T;
-      const body = (await res.text()).replace(/\s+/g, " ").slice(0, 160);
-      last = new ApiError(`Pokémon TCG API: HTTP ${res.status}${body ? ` (${body})` : ""}`, res.status);
+      const body = await res.text();
+      last = new ApiError(describeHttpFailure("Pokémon TCG API", res.status, body), res.status);
       if (res.status < 500 && res.status !== 429) throw last; // erro do pedido: não repetir
     } catch (e) {
       if (e instanceof ApiError && e.status && e.status < 500 && e.status !== 429) throw e;

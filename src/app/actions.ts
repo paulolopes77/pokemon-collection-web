@@ -63,23 +63,38 @@ export async function syncSetsAction(): Promise<ActionResult> {
 const priceSummary = (r: { filled: number; remaining: number }) =>
   `${r.filled} preços preenchidos` + (r.remaining > 0 ? `, ${r.remaining} cartas ainda sem preço` : "");
 
-/** Sincroniza as cartas do set e depois preenche os preços em falta com a TCGdex. */
+/**
+ * Sincroniza as cartas do set (Pokémon TCG API) e depois preenche os preços em falta com a TCGdex.
+ * Se a API principal falhar (ex.: 502), continua com o que já está em cache e tenta a TCGdex na mesma.
+ */
 export async function syncSetAction(setId: string): Promise<ActionResult> {
   try {
     if (typeof setId !== "string" || !setId) throw new Error("Pedido inválido.");
     await requireUser();
-    const n = await syncSetCards(setId);
-    let fill = "";
+
+    let head: string;
+    let mainError: string | null = null;
     try {
-      const r = await fillSetPrices(setId, 25_000);
-      fill = ` · ${priceSummary(r)}`;
-      if (r.note) fill += ` (${r.note})`;
+      head = `${await syncSetCards(setId)} cartas sincronizadas`;
     } catch (e) {
+      mainError = msg(e);
+      head = "Não foi possível atualizar as cartas";
+    }
+
+    let fill = "";
+    let fillFailed = false;
+    try {
+      const r = await fillSetPrices(setId, mainError ? 40_000 : 25_000);
+      fill = ` · ${priceSummary(r)}${r.note ? ` (${r.note})` : ""}`;
+    } catch (e) {
+      fillFailed = true;
       fill = ` · preços alternativos falharam (${msg(e)})`;
     }
+
     revalidatePath(`/sets/${setId}`);
     revalidatePath("/", "layout");
-    return { ok: true, message: `${n} cartas sincronizadas${fill}.` };
+    const text = mainError ? `${head}: ${mainError}${fill}. Tenta novamente daqui a uns minutos.` : `${head}${fill}.`;
+    return { ok: !(mainError && fillFailed), message: text };
   } catch (e) {
     return { ok: false, message: msg(e) };
   }
