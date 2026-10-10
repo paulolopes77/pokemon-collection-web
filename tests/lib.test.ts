@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { speciesFromName, speciesOf } from "../src/lib/species";
 import { buildRows, filterAndSort } from "../src/lib/grouping";
 import { buildNameQuery, numberSortKey, toCardRow } from "../src/lib/mappers";
+import { cardmarketLink, tcgplayerLink } from "../src/lib/market-links";
 import { clampInt, formatCode, generateCode, inviteState, normalizeCode } from "../src/lib/invite";
 import { isAdminEmail, parseAdminEmails, validateNewUser, validatePassword } from "../src/lib/admin-rules";
 import { normalizeNumber, pickTcgdexSet } from "../src/lib/tcgdex-rules";
@@ -204,4 +205,19 @@ test("reference price is the 30-day average; 'From' (low) is never the value", (
   const row = toCardRow({ id: "x", cardmarket: { prices: { lowPrice: 144 } } });
   assert.equal(row.low, 144);
   assert.equal(row.price_source, null);
+});
+
+test("market links", () => {
+  assert.deepEqual(cardmarketLink({ cm_url: "https://prices.pokemontcg.io/cardmarket/base1-4", name: "Charizard" }), {
+    url: "https://prices.pokemontcg.io/cardmarket/base1-4",
+    direct: true,
+  });
+  assert.deepEqual(cardmarketLink({ cm_url: null, name: "Mega Darkrai ex" }), {
+    url: "https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=Mega%20Darkrai%20ex",
+    direct: false,
+  });
+  assert.equal(
+    tcgplayerLink({ name: "Mr. Mime" }),
+    "https://www.tcgplayer.com/search/pokemon/product?productLineName=pokemon&q=Mr.%20Mime&view=grid",
+  );
 });

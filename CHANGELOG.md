@@ -1,5 +1,8 @@
 # Histórico de versões
 
+## 0.7.1 — 2026-10-12
+- Página da carta: sombra na imagem; botões Cardmarket e TCGplayer por baixo da imagem.
+
 ## 0.7.0 — 2026-10-12
 - Sets e pesquisa: ícone de coração para adicionar/remover da wishlist (a par do «+»); quantidade e wishlist
   atualizam logo no ecrã.

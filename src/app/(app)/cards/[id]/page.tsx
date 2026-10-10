@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CardActions } from "@/components/CardActions";
+import { CardImagePanel } from "@/components/CardImagePanel";
 import { PriceChart, type PricePoint } from "@/components/PriceChart";
 import { eur } from "@/lib/money";
 import { createClient } from "@/lib/supabase/server";
@@ -46,7 +47,6 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
     card.hp ? `HP ${card.hp}` : "",
     card.artist ? `Ilustrador: ${card.artist}` : "",
   ].filter(Boolean);
-  const cmLink = card.cm_url ?? `https://www.cardmarket.com/en/Pokemon/Products/Search?searchString=${encodeURIComponent(card.name)}`;
 
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr] xl:grid-cols-[minmax(0,400px)_1fr]">
@@ -54,8 +54,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
         <Link href={card.set_id ? `/sets/${encodeURIComponent(card.set_id)}` : "/"} className="text-sm text-zinc-500 underline">
           ← {card.set_name || "Voltar"}
         </Link>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={card.image_large || card.image_small} alt={card.name} className="mx-auto mt-2 w-full max-w-xs rounded-lg" />
+        <CardImagePanel card={card} />
       </div>
 
       <div className="space-y-4">
@@ -106,9 +105,6 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
           <PriceChart points={points} />
         </section>
 
-        <a href={cmLink} target="_blank" rel="noopener noreferrer" className="btn w-full">
-          {card.cm_url ? "Ver no Cardmarket" : "Procurar no Cardmarket"}
-        </a>
       </div>
     </div>
   );
