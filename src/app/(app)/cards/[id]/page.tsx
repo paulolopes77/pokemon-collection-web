@@ -1,4 +1,4 @@
-import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { notFound } from "next/navigation";
 import { CollectionBox } from "@/components/CollectionBox";
 import { PriceHeader } from "@/components/PriceHeader";
@@ -56,9 +56,7 @@ export default async function CardPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,320px)_1fr] xl:grid-cols-[minmax(0,400px)_1fr]">
       <div>
-        <Link href={card.set_id ? `/sets/${encodeURIComponent(card.set_id)}` : "/"} className="text-sm text-zinc-500 underline">
-          ← {card.set_name || "Voltar"}
-        </Link>
+        <BackLink fallback={card.set_id ? `/sets/${encodeURIComponent(card.set_id)}` : "/"} label={card.set_name || "Voltar"} />
         <CardImagePanel card={card} />
       </div>
 
